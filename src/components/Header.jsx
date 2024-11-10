@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Header = ({ onCategoryChange }) => {
-	const handleClick = (category) => {
+	const navigate = useNavigate();
+
+	const handleClick = (category, path) => {
 		onCategoryChange(category);
+		navigate(path);
 	};
 
 	return (
@@ -12,34 +15,34 @@ const Header = ({ onCategoryChange }) => {
 			<nav>
 				<ul className="menu">
 					<li>
-						<Link to="/" onClick={() => handleClick('')} className="boton-menu boton-categoria">
+						<button onClick={() => handleClick('', '/')} className="boton-menu boton-categoria active">
 							<i className="bi bi-hand-index-thumb-fill"></i> Todos los productos
-						</Link>
+						</button>
 					</li>
 					<li>
-						<Link to="/category/celulares" onClick={() => handleClick('celulares')} className="boton-menu boton-categoria">
+						<button onClick={() => handleClick('celulares', '/category/celulares')} className="boton-menu boton-categoria">
 							<i className="bi bi-phone"></i> Celulares
-						</Link>
+						</button>
 					</li>
 					<li>
-						<Link to="/category/computadores" onClick={() => handleClick('computadores')} className="boton-menu boton-categoria">
+						<button onClick={() => handleClick('computadores', '/category/computadores')} className="boton-menu boton-categoria">
 							<i className="bi bi-laptop"></i> Computadores
-						</Link>
+						</button>
 					</li>
 					<li>
-						<Link to="/category/audifonos" onClick={() => handleClick('audifonos')} className="boton-menu boton-categoria">
+						<button onClick={() => handleClick('audifonos', '/category/audifonos')} className="boton-menu boton-categoria">
 							<i className="bi bi-headphones"></i> Audífonos
-						</Link>
+						</button>
 					</li>
 					<li>
-						<Link to="/cart" className="boton-menu boton-carrito">
+						<button onClick={() => navigate('/cart')} className="boton-menu boton-carrito">
 							<i className="bi bi-cart-fill"></i> Carrito <span id="numerito" className="numerito">0</span>
-						</Link>
+						</button>
 					</li>
 					<li>
-						<Link to="/auth" className="boton-menu">
+						<button onClick={() => navigate('/auth')} className="boton-menu">
 							<i className="bi bi-person-circle"></i> Iniciar sesión
-						</Link>
+						</button>
 					</li>
 				</ul>
 			</nav>
