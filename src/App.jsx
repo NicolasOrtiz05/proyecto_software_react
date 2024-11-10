@@ -91,6 +91,26 @@ const AppContent = () => {
           </nav>
         </header>
       );
+    } else if (location.pathname === '/auth') {
+      return (
+        <header className="header-desktop">
+          <h1 className="logo">TechShop</h1>
+          <nav>
+            <ul className="menu">
+              <li>
+                <button onClick={() => navigate('/')} className="boton-menu boton-volver">
+                  <i className="bi bi-arrow-return-left"></i> Volver
+                </button>
+              </li>
+              <li>
+                <button className="boton-menu active">
+                  <i className="bi bi-person-circle"></i> Iniciar sesión
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </header>
+      );
     } else {
       return (
         <header className="header-desktop">

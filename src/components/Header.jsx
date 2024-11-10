@@ -15,7 +15,7 @@ const Header = ({ onCategoryChange }) => {
 			<nav>
 				<ul className="menu">
 					<li>
-						<button onClick={() => handleClick('', '/')} className="boton-menu boton-categoria active">
+						<button id="todos" onClick={() => handleClick('', '/')} className="boton-menu boton-categoria disabled">
 							<i className="bi bi-hand-index-thumb-fill"></i> Todos los productos
 						</button>
 					</li>
