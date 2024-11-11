@@ -1,13 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const Header = ({ onCategoryChange }) => {
+const Header = ({ user, handleClick, actualizarNumerito }) => {
 	const navigate = useNavigate();
-
-	const handleClick = (category, path) => {
-		onCategoryChange(category);
-		navigate(path);
-	};
 
 	return (
 		<header className="header-desktop">
@@ -15,7 +10,7 @@ const Header = ({ onCategoryChange }) => {
 			<nav>
 				<ul className="menu">
 					<li>
-						<button id="todos" onClick={() => handleClick('', '/')} className="boton-menu boton-categoria disabled">
+						<button id="todos" onClick={() => handleClick('', '/')} className="boton-menu boton-categoria active ">
 							<i className="bi bi-hand-index-thumb-fill"></i> Todos los productos
 						</button>
 					</li>
@@ -36,13 +31,17 @@ const Header = ({ onCategoryChange }) => {
 					</li>
 					<li>
 						<button onClick={() => navigate('/cart')} className="boton-menu boton-carrito">
-							<i className="bi bi-cart-fill"></i> Carrito <span id="numerito" className="numerito">0</span>
+							<i className="bi bi-cart-fill"></i> Carrito <span id="numerito" className="numerito">{actualizarNumerito()}</span>
 						</button>
 					</li>
 					<li>
-						<button onClick={() => navigate('/auth')} className="boton-menu">
-							<i className="bi bi-person-circle"></i> Iniciar sesión
-						</button>
+						{user ? (
+							<span onClick={() => navigate('/auth')} className="boton-menu">{user.email}</span>
+						) : (
+							<button onClick={() => navigate('/auth')} className="boton-menu">
+								<i className="bi bi-person-circle"></i> Iniciar sesión
+							</button>
+						)}
 					</li>
 				</ul>
 			</nav>

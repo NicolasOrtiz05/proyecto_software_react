@@ -5,7 +5,9 @@ import Cart from './pages/Cart';
 import Auth from './pages/Auth';
 import Admin from './pages/Admin';
 import Producto from './components/Producto';
+import Header from './components/Header';
 import { getProductos } from './services/firebaseService';
+import { onAuthStateChanged, auth } from './services/firebase-config';
 import './index.css';
 
 function App() {
@@ -24,8 +26,17 @@ const AppContent = () => {
   const [filteredProductos, setFilteredProductos] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [productosEnCarrito, setProductosEnCarrito] = useState(JSON.parse(localStorage.getItem('productos-en-carrito')) || []);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+      } else {
+        setUser(null);
+      }
+    });
+
     getProductos().then(productos => {
       setProductos(productos);
       if (category) {
@@ -152,43 +163,7 @@ const AppContent = () => {
       );
     } else {
       return (
-        <header className="header-desktop">
-          <h1 className="logo">TechShop</h1>
-          <nav>
-            <ul className="menu">
-              <li>
-                <button onClick={() => handleClick('', '/')} className="boton-menu boton-categoria active">
-                  <i className="bi bi-hand-index-thumb-fill"></i> Todos los productos
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleClick('celulares', '/category/celulares')} className="boton-menu boton-categoria">
-                  <i className="bi bi-phone"></i> Celulares
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleClick('computadores', '/category/computadores')} className="boton-menu boton-categoria">
-                  <i className="bi bi-laptop"></i> Computadores
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleClick('audifonos', '/category/audifonos')} className="boton-menu boton-categoria">
-                  <i className="bi bi-headphones"></i> Audífonos
-                </button>
-              </li>
-              <li>
-                <button onClick={() => navigate('/cart')} className="boton-menu boton-carrito">
-                  <i className="bi bi-cart-fill"></i> Carrito <span id="numerito" className="numerito">{actualizarNumerito()}</span>
-                </button>
-              </li>
-              <li>
-                <button onClick={() => navigate('/auth')} className="boton-menu">
-                  <i className="bi bi-person-circle"></i> Iniciar sesión
-                </button>
-              </li>
-            </ul>
-          </nav>
-        </header>
+        <Header user={user} handleClick={handleClick} actualizarNumerito={actualizarNumerito} />
       );
     }
   };
