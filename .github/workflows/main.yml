@@ -56,7 +56,7 @@ jobs:
       run: jmeter -n -t load_test.jmx -l results.jtl -e -o /tmp/report
 
     - name: Upload JMeter report
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: jmeter-report
         path: /tmp/report
