@@ -1,5 +1,6 @@
 /* global Swal, Toastify */
 import React, { useEffect } from 'react';
+import { auth, onAuthStateChanged, set, dbRef, database } from '../services/firebase-config';
 import '../index.css';
 
 const Cart = ({ productosEnCarrito, setProductosEnCarrito }) => {
@@ -35,17 +36,89 @@ const Cart = ({ productosEnCarrito, setProductosEnCarrito }) => {
 	};
 
 	const comprarCarrito = () => {
-		// Lógica para comprar
+		onAuthStateChanged(auth, (user) => {
+			if (user) {
+				// Preparar datos del pedido
+				const pedido = {
+					uid: user.uid,
+					productos: productosEnCarrito.map(producto => ({
+						id: producto.id,
+						titulo: producto.titulo,
+						cantidad: producto.cantidad,
+						precio: producto.precio,
+						subtotal: producto.precio * producto.cantidad
+					})),
+					total: productosEnCarrito.reduce((acc, producto) => acc + (producto.precio * producto.cantidad), 0),
+					fecha: new Date().toISOString()
+				};
+
+				const colombiaTime = new Date().toLocaleString("en-US", { timeZone: "America/Bogota" });
+
+				set(dbRef(database, 'pedidos/' + user.uid), {
+					uid: user.uid,
+					productos: productosEnCarrito.map(producto => ({
+						id: producto.id,
+						titulo: producto.titulo,
+						cantidad: producto.cantidad,
+						precio: producto.precio,
+						subtotal: producto.precio * producto.cantidad
+					})),
+					total: productosEnCarrito.reduce((acc, producto) => acc + (producto.precio * producto.cantidad), 0),
+					fecha: colombiaTime
+				}).then(() => {
+					Swal.fire({
+						title: '¡Compra realizada!',
+						text: 'Tu pedido ha sido guardado con éxito.',
+						icon: 'success'
+					});
+
+					// Limpiar carrito
+					setProductosEnCarrito([]);
+					localStorage.setItem('productos-en-carrito', JSON.stringify([]));
+
+					// Mostrar pantalla de "Compra realizada"
+					const contenedorCarritoVacio = document.querySelector("#carrito-vacio");
+					const contenedorCarritoProductos = document.querySelector("#carrito-productos");
+					const contenedorCarritoAcciones = document.querySelector("#carrito-acciones");
+					const contenedorCarritoComprado = document.querySelector("#carrito-comprado");
+
+					if (contenedorCarritoVacio) contenedorCarritoVacio.classList.add("disabled");
+					if (contenedorCarritoProductos) contenedorCarritoProductos.classList.add("disabled");
+					if (contenedorCarritoAcciones) contenedorCarritoAcciones.classList.add("disabled");
+					if (contenedorCarritoComprado) contenedorCarritoComprado.classList.remove("disabled");
+				}).catch(error => {
+					console.error("Error al guardar el pedido en Firebase:", error);
+					Swal.fire({
+						title: 'Error',
+						text: 'No se pudo completar la compra.',
+						icon: 'error'
+					});
+				});
+			} else {
+				Swal.fire({
+					title: 'Para comprar tienes que iniciar sesión',
+					icon: 'question',
+					html: `¿Quieres iniciar sesión?`,
+					showCancelButton: true,
+					focusConfirm: false,
+					confirmButtonText: 'Sí',
+					cancelButtonText: 'No'
+				}).then((result) => {
+					if (result.isConfirmed) {
+						window.location.href = '/auth';
+					}
+				});
+			}
+		});
 	};
 
 	const total = productosEnCarrito.reduce((acc, producto) => acc + (producto.precio * producto.cantidad), 0);
 
 	return (
-
 		<div>
 			<h2 className="titulo-principal">Carrito</h2>
 			{productosEnCarrito.length > 0 ? (
-				<div class="contenedor-carrito">
+				<div className="contenedor-carrito">
 					{productosEnCarrito.map(producto => (
 						<div key={producto.id} className="carrito-producto">
 							<img className="carrito-producto-imagen" src={producto.url} alt={producto.titulo} />
