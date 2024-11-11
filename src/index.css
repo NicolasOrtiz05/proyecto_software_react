@@ -527,6 +527,85 @@ main {
 	border-bottom-right-radius: 1rem;
 }
 
+.promotion-container {
+	background-color: #f5faff;
+	border: 2px solid #00b09b;
+	border-radius: 8px;
+	padding: 16px;
+	max-width: 600px;
+	margin: 20px auto;
+	text-align: center;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .promotion-title {
+	font-size: 1.5em;
+	font-weight: bold;
+	color: #00b09b;
+	margin-bottom: 8px;
+  }
+  
+  .promotion-message {
+	font-size: 1.2em;
+	color: #333;
+	padding: 8px;
+	background-color: #e7f9f1;
+	border-radius: 5px;
+  }
+
+  .pedido-card {
+	background-color: #f8f9fa;
+	border-radius: 10px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	padding: 15px;
+	margin-bottom: 20px;
+	transition: all 0.3s ease;
+  }
+  
+  .pedido-card:hover {
+	transform: scale(1.02);
+  }
+  
+  .pedido-titulo {
+	font-size: 1.2rem;
+	color: #333;
+	margin-bottom: 10px;
+  }
+  
+  .productos-list {
+	margin-top: 10px;
+  }
+  
+  .productos-list h5 {
+	font-size: 1rem;
+	color: #555;
+  }
+  
+  .producto-item {
+	font-size: 1rem;
+	margin-left: 20px;
+	color: #666;
+  }
+  
+  .producto-item:before {
+	content: "• ";
+	color: #007bff;
+	margin-right: 10px;
+  }
+  
+  p {
+	font-size: 1rem;
+	color: #333;
+  }
+  
+  .no-pedidos {
+	font-size: 1.1rem;
+	color: #888;
+	text-align: center;
+	padding: 10px;
+  }
+  
+
 .header-mobile {
 	display: none;
 }
@@ -538,6 +617,35 @@ main {
 .disabled {
 	display: none;
 }
+
+.pedido-item {
+    border: 1px solid #ddd;
+    padding: 16px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.pedido-item h4 {
+    margin-bottom: 8px;
+    color: #2c3e50;
+}
+
+.pedido-item p {
+    margin: 5px 0;
+    color: #7f8c8d;
+}
+
+.pedido-item ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.pedido-item li {
+    padding: 4px 0;
+    color: #2c3e50;
+}
+
 
 /*** MEDIA QUERIES ***/
 

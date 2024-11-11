@@ -1,14 +1,16 @@
 /* global Swal, Toastify */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from '../services/firebase-config';
+import { auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, database, dbRef, onValue } from '../services/firebase-config';
 import '../index.css';
 
 const Auth = () => {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [user, setUser] = useState(null);
+	const [promotion, setPromotion] = useState('');
 	const navigate = useNavigate();
+	const [pedidos, setPedidos] = useState([]);
 	const adminEmail = "admin@example1.com";
 
 	useEffect(() => {
@@ -17,13 +19,41 @@ const Auth = () => {
 				setUser(user);
 				if (user.email === adminEmail) {
 					navigate('/admin');
+				} else {
+					
+					const pedidosRef = dbRef(database, 'pedidos/' + user.uid);
+					onValue(pedidosRef, (snapshot) => {
+						const data = snapshot.val();
+						if (data) {
+							
+							setPedidos(Array.isArray(data) ? data : Object.values(data));
+						} else {
+							setPedidos([]); 
+						}
+					});
 				}
 			} else {
 				setUser(null);
 			}
 		});
+	
 		return () => unsubscribe();
 	}, [navigate]);
+	
+
+	useEffect(() => {
+		
+		const promotionsRef = dbRef(database, 'promotions');
+		const unsubscribe = onValue(promotionsRef, (snapshot) => {
+			if (snapshot.exists()) {
+				setPromotion(snapshot.val());
+			} else {
+				setPromotion('');
+			}
+		});
+
+		return () => unsubscribe();
+	}, []);
 
 	const handleLogin = (e) => {
 		e.preventDefault();
@@ -132,6 +162,39 @@ const Auth = () => {
 				<div>
 					<p>Usuario: {user.email}</p>
 					<button onClick={handleLogout} className="boton-aut">Cerrar Sesión</button>
+					{user.email !== adminEmail && promotion && (
+						<div className="promotion-container">
+							<h3>Promoción Activa</h3>
+							<p>{promotion}</p>
+						</div>
+					)}
+					{user.email !== adminEmail && (
+    <div>
+        <h3>Mis Pedidos</h3>
+        {pedidos && pedidos.length > 0 ? (
+            pedidos.map((pedido, index) => (
+                <div key={index} className="pedido-item">
+                    <h4>Pedido {index + 1}</h4>
+                    <p><strong>Total:</strong> ${pedido.total}</p>
+                    <p><strong>Estado:</strong> {pedido.estado || 'No disponible'}</p> {/* Asumiendo que cada pedido puede tener un estado */}
+                    <ul>
+                        {pedido.productos && pedido.productos.length > 0 ? (
+                            pedido.productos.map((producto, i) => (
+                                <li key={i}>
+                                    {producto.titulo} - {producto.cantidad} x ${producto.precio} = ${producto.subtotal}
+                                </li>
+                            ))
+                        ) : (
+                            <p>No hay productos en este pedido.</p>
+                        )}
+                    </ul>
+                </div>
+            ))
+        ) : (
+            <p>No has realizado ningún pedido.</p>
+        )}
+    </div>
+)}
 				</div>
 			) : (
 				<div className="login-container">
@@ -152,5 +215,8 @@ const Auth = () => {
 		</main>
 	);
 };
+
+
+
 
 export default Auth;

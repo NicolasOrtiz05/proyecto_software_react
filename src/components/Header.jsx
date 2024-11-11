@@ -1,8 +1,16 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Header = ({ user, handleClick, actualizarNumerito }) => {
 	const navigate = useNavigate();
+	const [activeCategory, setActiveCategory] = useState('todos'); 
+
+	
+	const handleCategoryClick = (category, path) => {
+		setActiveCategory(category); 
+		handleClick(category, path); 
+	};
 
 	return (
 		<header className="header-desktop">
@@ -10,22 +18,35 @@ const Header = ({ user, handleClick, actualizarNumerito }) => {
 			<nav>
 				<ul className="menu">
 					<li>
-						<button id="todos" onClick={() => handleClick('', '/')} className="boton-menu boton-categoria active ">
+						<button
+							id="todos"
+							onClick={() => handleCategoryClick('', '/')}
+							className={`boton-menu boton-categoria ${activeCategory === 'todos' ? 'active' : ''}`}
+						>
 							<i className="bi bi-hand-index-thumb-fill"></i> Todos los productos
 						</button>
 					</li>
 					<li>
-						<button onClick={() => handleClick('celulares', '/category/celulares')} className="boton-menu boton-categoria">
+						<button
+							onClick={() => handleCategoryClick('celulares', '/category/celulares')}
+							className={`boton-menu boton-categoria ${activeCategory === 'celulares' ? 'active' : ''}`}
+						>
 							<i className="bi bi-phone"></i> Celulares
 						</button>
 					</li>
 					<li>
-						<button onClick={() => handleClick('computadores', '/category/computadores')} className="boton-menu boton-categoria">
+						<button
+							onClick={() => handleCategoryClick('computadores', '/category/computadores')}
+							className={`boton-menu boton-categoria ${activeCategory === 'computadores' ? 'active' : ''}`}
+						>
 							<i className="bi bi-laptop"></i> Computadores
 						</button>
 					</li>
 					<li>
-						<button onClick={() => handleClick('audifonos', '/category/audifonos')} className="boton-menu boton-categoria">
+						<button
+							onClick={() => handleCategoryClick('audifonos', '/category/audifonos')}
+							className={`boton-menu boton-categoria ${activeCategory === 'audifonos' ? 'active' : ''}`}
+						>
 							<i className="bi bi-headphones"></i> Audífonos
 						</button>
 					</li>

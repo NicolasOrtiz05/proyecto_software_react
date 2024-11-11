@@ -8,6 +8,7 @@ import Producto from './components/Producto';
 import Header from './components/Header';
 import { getProductos } from './services/firebaseService';
 import { onAuthStateChanged, auth } from './services/firebase-config';
+import Promotions from './components/Promotions';
 import './index.css';
 
 function App() {
@@ -176,6 +177,7 @@ const AppContent = () => {
           <Route path="/" element={
             <div>
               <h2 className="titulo-principal">{selectedCategory ? selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1) : 'Todos los productos'}</h2>
+              <Promotions /> {/* Agregamos el componente de Promociones */}
               <div id="contenedor-productos" className="contenedor-productos">
                 {filteredProductos.map(producto => (
                   <Producto key={producto.id} producto={producto} agregarAlCarrito={agregarAlCarrito} />

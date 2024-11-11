@@ -1,21 +1,74 @@
-/* global Swal, Toastify */
 import React, { useEffect, useState } from 'react';
-import { onAuthStateChanged, auth, dbRef, database, get, set, ref, uploadBytes, getDownloadURL, storage, remove, deleteObject, signOut } from '../services/firebase-config';
-import '../index.css';
-
+import { onAuthStateChanged, auth, dbRef, database, get, set, ref, uploadBytes, getDownloadURL, storage, remove, deleteObject, signOut, onValue } from '../services/firebase-config';
+import Swal from 'sweetalert2';
+import Toastify from 'toastify-js';
+import 'sweetalert2/dist/sweetalert2.css';
+import 'toastify-js/src/toastify.css';
 const Admin = () => {
 	const [productos, setProductos] = useState([]);
 	const [editingProductId, setEditingProductId] = useState(null);
+	const [promotion, setPromotion] = useState('');
+	const [pedidos, setPedidos] = useState([]);
 
 	useEffect(() => {
-		onAuthStateChanged(auth, (user) => {
+		const unsubscribe = onAuthStateChanged(auth, (user) => {
 			if (!user) {
 				window.location.href = '/auth';
+			} else {
+
+				const pedidosRef = dbRef(database, 'pedidos');
+				onValue(pedidosRef, (snapshot) => {
+					if (snapshot.exists()) {
+						const pedidosData = snapshot.val();
+						const todosLosPedidos = [];
+
+						Object.keys(pedidosData).forEach(userId => {
+							const pedidosUsuario = pedidosData[userId];
+							Object.keys(pedidosUsuario).forEach(pedidoId => {
+								todosLosPedidos.push({
+									id: pedidoId,
+									userId: userId,
+									...pedidosUsuario[pedidoId]
+								});
+							});
+						});
+
+						todosLosPedidos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+						setPedidos(todosLosPedidos);
+					} else {
+						setPedidos([]);
+					}
+				});
 			}
 		});
 
 		cargarProductos();
+		return () => unsubscribe();
 	}, []);
+
+	const handleSendPromotion = () => {
+		if (promotion.trim() !== '') {
+			set(dbRef(database, 'promotions'), promotion.trim())
+				.then(() => {
+					Toastify({
+						text: 'Promoción enviada exitosamente',
+						style: {
+							background: 'linear-gradient(to right, #00b09b, #96c93d)',
+						},
+					}).showToast();
+					setPromotion('');
+				})
+				.catch((error) => {
+					console.error('Error al enviar la promoción:', error);
+					Toastify({
+						text: 'Error al enviar la promoción',
+						style: {
+							background: 'linear-gradient(to right, #ff0000, #ff5555)',
+						},
+					}).showToast();
+				});
+		}
+	};
 
 	const cargarProductos = () => {
 		get(dbRef(database, 'productos')).then((snapshot) => {
@@ -370,6 +423,63 @@ const Admin = () => {
 					))}
 				</div>
 			</div>
+
+			<div className="admin-actions">
+				<h3>Enviar Promoción</h3>
+				<textarea
+					id="promotion-text"
+					className="input-estilo"
+					placeholder="Escribe la promoción aquí"
+					value={promotion}
+					onChange={(e) => setPromotion(e.target.value)}
+				></textarea>
+				<button
+					id="btn-send-promotion"
+					className="boton-admin"
+					onClick={handleSendPromotion}
+				>
+					<i className="bi bi-megaphone-fill"></i> Enviar Promoción
+				</button>
+			</div>
+
+			<div className="admin-actions">
+				<h3>Pedidos de Todos los Usuarios</h3>
+				{pedidos && pedidos.length > 0 ? (
+					<div className="pedidos-container">
+						{pedidos.map((pedido) => (
+							<div key={pedido.id} className="pedido-card">
+								<h4 className="pedido-titulo">Pedido #{pedido.id}</h4>
+								<p><strong>ID Usuario:</strong> {pedido.userId}</p>
+								<p><strong>Fecha:</strong> {pedido.fecha}</p>
+								<p><strong>Estado:</strong> {pedido.estado || 'pendiente'}</p>
+								<p><strong>Total:</strong> ${pedido.total}</p>
+								<div className="productos-pedido">
+									<h5>Productos:</h5>
+									{pedido.productos && pedido.productos.length > 0 ? (
+										<ul>
+											{pedido.productos.map((producto, index) => (
+												<li key={index} className="producto-pedido-item">
+													<div className="producto-info">
+														<span className="producto-titulo">{producto.titulo}</span>
+														
+														
+													</div>
+												</li>
+											))}
+										</ul>
+									) : (
+										<p>No hay productos en este pedido.</p>
+									)}
+								</div>
+							</div>
+						))}
+					</div>
+				) : (
+					<p>No hay pedidos registrados.</p>
+				)}
+			</div>
+
+
 			<button onClick={handleLogout} className="boton-aut">Cerrar Sesión</button>
 		</div>
 	);
