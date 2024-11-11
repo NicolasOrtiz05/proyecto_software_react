@@ -177,6 +177,7 @@ const Admin = () => {
 							uploadBytes(storageReference, imagen).then((snapshot) => {
 								getDownloadURL(snapshot.ref).then((url) => {
 									set(dbRef(database, 'productos/' + productoId), {
+										id: productoId, // Asegúrate de mantener el id
 										titulo: titulo,
 										precio: Number(precio),
 										tipo: tipo,
@@ -215,6 +216,7 @@ const Admin = () => {
 							});
 						} else {
 							set(dbRef(database, 'productos/' + productoId), {
+								id: productoId, // Asegúrate de mantener el id
 								titulo: titulo,
 								precio: Number(precio),
 								tipo: tipo,
@@ -249,7 +251,6 @@ const Admin = () => {
 				}
 			}).showToast();
 		});
-		setEditingProductId(null);
 	};
 
 	const eliminarProducto = (productoId) => {

@@ -1,3 +1,4 @@
+/* global Swal, Toastify */
 import React, { useEffect } from 'react';
 import '../index.css';
 
@@ -7,6 +8,24 @@ const Cart = ({ productosEnCarrito, setProductosEnCarrito }) => {
 	}, [productosEnCarrito]);
 
 	const eliminarDelCarrito = (id) => {
+		Toastify({
+			text: "Producto eliminado",
+			duration: 3000,
+			close: true,
+			gravity: "top",
+			position: "right",
+			stopOnFocus: true,
+			style: {
+				background: "linear-gradient(to right, #2F579C, #617ebd)",
+				borderRadius: "2rem",
+				textTransform: "uppercase",
+				fontSize: ".75rem"
+			},
+			offset: {
+				x: '1.5rem',
+				y: '1.5rem'
+			}
+		}).showToast();
 		const nuevosProductos = productosEnCarrito.filter(producto => producto.id !== id);
 		setProductosEnCarrito(nuevosProductos);
 	};
