@@ -1,0 +1,62 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run unit tests
+      run: npm test
+
+    - name: Run Cypress tests
+      uses: cypress-io/github-action@v2
+      with:
+        build: npm run build
+        start: npm start
+        wait-on: http://localhost:3000
+        wait-on-timeout: 60
+        config-file: cypress.json
+
+  load-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install JMeter
+      run: sudo apt-get install jmeter
+
+    - name: Run JMeter tests
+      run: jmeter -n -t load_test.jmx -l results.jtl -e -o /tmp/report
+
+    - name: Upload JMeter report
+      uses: actions/upload-artifact@v2
+      with:
+        name: jmeter-report
+        path: /tmp/report
