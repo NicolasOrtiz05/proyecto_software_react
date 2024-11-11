@@ -1,5 +1,6 @@
 /* global Swal, Toastify */
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from '../services/firebase-config';
 import '../index.css';
 
@@ -7,17 +8,22 @@ const Auth = () => {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [user, setUser] = useState(null);
+	const navigate = useNavigate();
+	const adminEmail = "admin@example1.com";
 
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
 			if (user) {
 				setUser(user);
+				if (user.email === adminEmail) {
+					navigate('/admin');
+				}
 			} else {
 				setUser(null);
 			}
 		});
 		return () => unsubscribe();
-	}, []);
+	}, [navigate]);
 
 	const handleLogin = (e) => {
 		e.preventDefault();
@@ -29,6 +35,9 @@ const Auth = () => {
 					icon: 'success',
 					confirmButtonText: 'Ok'
 				});
+				if (userCredential.user.email === adminEmail) {
+					navigate('/admin');
+				}
 			})
 			.catch((error) => {
 				Swal.fire({

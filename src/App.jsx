@@ -111,6 +111,26 @@ const AppContent = () => {
           </nav>
         </header>
       );
+    } else if (location.pathname === '/admin') {
+      return (
+        <header className="header-desktop">
+          <h1 className="logo">TechShop - Admin</h1>
+          <nav>
+            <ul className="menu">
+              <li>
+                <button onClick={() => navigate('/')} className="boton-menu boton-volver">
+                  <i className="bi bi-arrow-return-left"></i> Volver
+                </button>
+              </li>
+              <li>
+                <button className="boton-menu active">
+                  <i className="bi bi-gear-fill"></i> Administración
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </header>
+      );
     } else {
       return (
         <header className="header-desktop">
