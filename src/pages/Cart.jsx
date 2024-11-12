@@ -1,10 +1,7 @@
+/* global Swal, Toastify */
 import React, { useEffect } from 'react';
 import { auth, onAuthStateChanged, set, dbRef, database, push } from '../services/firebase-config';
 import '../index.css';
-import Swal from 'sweetalert2';
-import { Toastify } from 'toastify-js';
-import 'sweetalert2/dist/sweetalert2.css';
-import 'toastify-js/src/toastify.css';
 const Cart = ({ productosEnCarrito, setProductosEnCarrito }) => {
     useEffect(() => {
         localStorage.setItem('productos-en-carrito', JSON.stringify(productosEnCarrito));
@@ -65,7 +62,7 @@ const Cart = ({ productosEnCarrito, setProductosEnCarrito }) => {
 
                 // Crear una referencia para los pedidos del usuario
                 const userOrdersRef = dbRef(database, `pedidos/${user.uid}`);
-                
+
                 // Generar una nueva entrada con ID único
                 const newOrderRef = push(userOrdersRef);
 
@@ -172,7 +169,7 @@ const Cart = ({ productosEnCarrito, setProductosEnCarrito }) => {
             ) : (
                 <p className="carrito-vacio">Tu carrito está vacío. <i className="bi bi-emoji-frown"></i></p>
             )}
-        </div> 
+        </div>
     );
 };
 

@@ -1,18 +1,18 @@
 {
-  "name": "your-project-name",
-  "version": "1.0.0",
+  "name": "proyecto_final",
+  "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "firebase": "^11.0.1",
     "proyecto_final": "file:",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0",
     "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4",
-    "your-project-name": "file:"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -20,7 +20,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "cypress:run": "cypress run",
+    "test:unit": "mocha 'src/**/*.test.js'",
+    "test:load": "jmeter -n -t load_test.jmx -l results.jtl -e -o /tmp/report"
   },
   "eslintConfig": {
     "extends": [
@@ -41,7 +43,10 @@
     ]
   },
   "devDependencies": {
-    "cypress": "^6.6.0",
+    "@testing-library/jest-dom": "^5.11.9",
+    "@testing-library/react": "^11.2.6",
+    "@testing-library/user-event": "^12.8.3",
+    "cypress": "^6.9.1",
     "mocha": "^8.3.2"
   }
 }

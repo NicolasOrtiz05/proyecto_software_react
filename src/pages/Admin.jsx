@@ -1,7 +1,10 @@
 /* global Swal, Toastify */
 import React, { useEffect, useState } from 'react';
 import { onAuthStateChanged, auth, dbRef, database, get, set, ref, uploadBytes, getDownloadURL, storage, remove, deleteObject, signOut, onValue } from '../services/firebase-config';
-
+import Swal from 'sweetalert2';
+import Toastify from 'toastify-js';
+import 'sweetalert2/dist/sweetalert2.css';
+import 'toastify-js/src/toastify.css';
 const Admin = () => {
 	const [productos, setProductos] = useState([]);
 	const [editingProductId, setEditingProductId] = useState(null);
@@ -459,8 +462,8 @@ const Admin = () => {
 												<li key={index} className="producto-pedido-item">
 													<div className="producto-info">
 														<span className="producto-titulo">{producto.titulo}</span>
-														
-														
+
+
 													</div>
 												</li>
 											))}
