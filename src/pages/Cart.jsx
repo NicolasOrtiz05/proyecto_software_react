@@ -2,6 +2,8 @@
 import React, { useEffect } from 'react';
 import { auth, onAuthStateChanged, set, dbRef, database, push } from '../services/firebase-config';
 import '../index.css';
+
+
 const Cart = ({ productosEnCarrito, setProductosEnCarrito }) => {
     useEffect(() => {
         localStorage.setItem('productos-en-carrito', JSON.stringify(productosEnCarrito));
