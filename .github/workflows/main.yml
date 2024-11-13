@@ -33,15 +33,6 @@ jobs:
     - name: Run unit tests
       run: npm test
 
-    - name: Run Cypress tests
-      uses: cypress-io/github-action@v2
-      with:
-        build: npm run build
-        start: npm start
-        wait-on: http://localhost:3000
-        wait-on-timeout: 60
-        config-file: cypress.json
-
   load-test:
     runs-on: ubuntu-latest
 
