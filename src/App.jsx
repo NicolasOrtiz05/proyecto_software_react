@@ -7,9 +7,10 @@ import Admin from './pages/Admin';
 import Producto from './components/Producto';
 import Header from './components/Header';
 import { getProductos } from './services/firebaseService';
-import { onAuthStateChanged, auth } from './services/firebase-config';
+import { onAuthStateChanged, auth, ref, storage, getDownloadURL} from './services/firebase-config';
 import Promotions from './components/Promotions';
 import './index.css';
+import { getAllProductos } from './services/productoServise';
 
 function App() {
   return (
@@ -38,7 +39,8 @@ const AppContent = () => {
       }
     });
 
-    getProductos().then(productos => {
+    getAllProductos().then(productos => {
+      cargarProductosConImagenes(productos);
       setProductos(productos);
       if (category) {
         setFilteredProductos(productos.filter(producto => producto.tipo === category));
@@ -49,6 +51,22 @@ const AppContent = () => {
       console.error("Error al obtener productos:", error);
     });
   }, [category]);
+
+  const cargarProductosConImagenes = (productos) => {
+		const imagePromises = productos.map(producto => {
+			const storageReference = ref(storage, `/${producto.tipo}/${producto.imagen}`);
+			return getDownloadURL(storageReference).then(url => {
+				return { ...producto, url };
+			}).catch(error => {
+				console.warn(`No se encontró imagen para el producto ${producto.id}`, error);
+				return null;
+			});
+		});
+
+		Promise.all(imagePromises).then(productosConImagenes => {
+			setFilteredProductos(productosConImagenes.filter(producto => producto !== null));
+		});
+	};
 
   useEffect(() => {
     localStorage.setItem('productos-en-carrito', JSON.stringify(productosEnCarrito));

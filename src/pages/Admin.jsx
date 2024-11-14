@@ -1,6 +1,7 @@
 /* global Swal, Toastify */
 import React, { useEffect, useState } from 'react';
 import { onAuthStateChanged, auth, dbRef, database, get, set, ref, uploadBytes, getDownloadURL, storage, remove, deleteObject, signOut, onValue } from '../services/firebase-config';
+import { createProducto, getAllProductos, updateProducto, deleteProducto } from '../services/productoServise';
 
 const Admin = () => {
 	const [productos, setProductos] = useState([]);
@@ -69,9 +70,8 @@ const Admin = () => {
 	};
 
 	const cargarProductos = () => {
-		get(dbRef(database, 'productos')).then((snapshot) => {
-			if (snapshot.exists()) {
-				const productos = Object.values(snapshot.val());
+		getAllProductos().then(productos => {
+			if (productos && productos.length > 0) {
 				cargarProductosConImagenes(productos);
 			} else {
 				setProductos([]);
@@ -116,11 +116,17 @@ const Admin = () => {
 					background: "linear-gradient(to right, #ff0000, #ff5555)",
 				}
 			}).showToast();
+			
 			return;
 		}
+		const id = "23"
+		const uniqueImageName = `${imagen.name.split('.')[0]}_${new Date().getTime()}.${imagen.name.split('.').pop()}`;
+		const nuevoProducto = { id, titulo, precio, imagen, tipo };
+		createProducto(nuevoProducto, imagen);
+		
 
 		const productoId = 'producto_' + new Date().getTime();
-		const uniqueImageName = `${imagen.name.split('.')[0]}_${new Date().getTime()}.${imagen.name.split('.').pop()}`;
+		
 		const storageReference = ref(storage, `/${tipo}/${uniqueImageName}`);
 
 		uploadBytes(storageReference, imagen).then((snapshot) => {
