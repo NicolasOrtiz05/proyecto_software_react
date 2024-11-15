@@ -1,7 +1,8 @@
 /* global Swal, Toastify */
 import React, { useEffect, useState } from 'react';
-import { onAuthStateChanged, auth, dbRef, database, get, set, ref, uploadBytes, getDownloadURL, storage, remove, deleteObject, signOut, onValue } from '../services/firebase-config';
+import { onAuthStateChanged, auth, dbRef, database, set, ref, uploadBytes, getDownloadURL, storage, signOut } from '../services/firebase-config';
 import { createProducto, getAllProductos, updateProducto, deleteProducto, getProductoById } from '../services/productoServise';
+import { getAllPedidos, getPedidoById, createPedido, deletePedido, updatePedido } from '../services/pedidoService';
 
 const Admin = () => {
 	const [productos, setProductos] = useState([]);
@@ -10,40 +11,31 @@ const Admin = () => {
 	const [pedidos, setPedidos] = useState([]);
 
 	useEffect(() => {
-		const unsubscribe = onAuthStateChanged(auth, (user) => {
+		const unsubscribe = onAuthStateChanged(auth, async (user) => { // Añadido async aquí
 			if (!user) {
 				window.location.href = '/auth';
 			} else {
-
-				const pedidosRef = dbRef(database, 'pedidos');
-				onValue(pedidosRef, (snapshot) => {
-					if (snapshot.exists()) {
-						const pedidosData = snapshot.val();
-						const todosLosPedidos = [];
-
-						Object.keys(pedidosData).forEach(userId => {
-							const pedidosUsuario = pedidosData[userId];
-							Object.keys(pedidosUsuario).forEach(pedidoId => {
-								todosLosPedidos.push({
-									id: pedidoId,
-									userId: userId,
-									...pedidosUsuario[pedidoId]
-								});
-							});
-						});
-
+				try {
+					// Esperamos a que se resuelva la promesa de getAllPedidos
+					const todosLosPedidos = await getAllPedidos(); 
+					
+					if (todosLosPedidos.length > 0) {
+						console.log("llega?");
+						// Ordenamos por fecha
 						todosLosPedidos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-						setPedidos(todosLosPedidos);
+						setPedidos(todosLosPedidos); // Actualizamos el estado
 					} else {
-						setPedidos([]);
+						setPedidos([]); // Si no hay pedidos, se setea un array vacío
 					}
-				});
+				} catch (error) {
+					console.error("Error al cargar los pedidos:", error);
+				}
 			}
 		});
-
 		cargarProductos();
-		return () => unsubscribe();
+		return () => unsubscribe(); // Limpiar el listener
 	}, []);
+	
 
 	const handleSendPromotion = () => {
 		if (promotion.trim() !== '') {
