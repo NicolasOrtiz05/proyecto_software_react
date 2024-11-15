@@ -6,7 +6,7 @@ const API_URL = 'http://localhost:8084/catalogo';
 // Función para crear un producto con imagen
 export const createProducto = async (producto, imagen) => {
   const formData = new FormData();
-  formData.append('producto', new Blob([JSON.stringify(producto)], { type: 'application/json' }));
+  formData.append('producto', producto);
   formData.append('imagen', imagen);
   console.log('producto', producto);
   console.log('imagen', imagen);
@@ -47,11 +47,18 @@ export const getProductoById = async (id) => {
 };
 
 // Función para actualizar un producto
-export const updateProducto = async (producto) => {
+export const updateProducto = async (producto, nuevaImagen = null) => {
+  const formData = new FormData();
+  formData.append('producto', JSON.stringify(producto));
+  
+  if (nuevaImagen) {
+    formData.append('imagen', nuevaImagen);
+  }
+
   try {
-    const response = await axios.put(`${API_URL}/editar`, producto, {
+    const response = await axios.put(`${API_URL}/editar`, formData, {
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;
