@@ -2,26 +2,25 @@ const { Builder, By, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 
 describe('paginaprincipaltest', function () {
-  this.timeout(30000);
+  this.timeout(30000); // Timeout extendido para pruebas
   let driver;
 
   beforeEach(async function () {
     const options = new chrome.Options();
     
-    // Opciones básicas
+    // Opciones para manejar errores y localhost
     options.addArguments('--ignore-certificate-errors');
     options.addArguments('--allow-insecure-localhost');
 
     if (process.env.GITHUB_ACTIONS) {
-      // Usamos el nombre del contenedor para Selenium
-          driver = await new Builder()
-      .forBrowser('chrome')
-      .setChromeOptions(options)
-      .usingServer('http://localhost:4444/wd/hub')  // Usar localhost para evitar problemas de DNS
-      .build();
-
+      // Usar Selenium de GitHub Actions (localhost)
+      driver = await new Builder()
+        .forBrowser('chrome')
+        .setChromeOptions(options)
+        .usingServer('http://localhost:4444/wd/hub')  // Conectar al contenedor de Selenium
+        .build();
     } else {
-      // Configuración local
+      // Configuración local de Selenium si no estamos en GitHub Actions
       driver = await new Builder()
         .forBrowser('chrome')
         .setChromeOptions(options)
@@ -36,10 +35,10 @@ describe('paginaprincipaltest', function () {
   });
 
   it('paginaprincipaltest', async function () {
-    await driver.get("http://localhost:3000/");
+    await driver.get("http://localhost:3000/");  // Asegúrate de que la app esté corriendo
     await driver.manage().window().setRect({ width: 1382, height: 736 });
 
-    // Interactuar con los elementos
+    // Interacciones con los elementos
     await clickWhenVisible(driver, By.css(".producto:nth-child(1) .producto-agregar"));
     await clickWhenVisible(driver, By.css(".producto:nth-child(3) .producto-agregar"));
     await clickWhenVisible(driver, By.css(".producto:nth-child(11) .producto-agregar"));
