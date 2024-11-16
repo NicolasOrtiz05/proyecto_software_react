@@ -15,12 +15,7 @@ jobs:
     services:
       selenium:
         image: selenium/standalone-chrome
-        ports:
-          - 4444:4444
-        options: >-
-          --health-cmd="curl --silent --show-error --fail http://localhost:4444/wd/hub/status"
-          --health-timeout=30s
-          --health-retries=3
+        options: --health-cmd="curl --silent --show-error --fail http://localhost:4444/wd/hub/status" --health-timeout=30s --health-retries=3
 
     steps:
       - uses: actions/checkout@v2
@@ -31,17 +26,16 @@ jobs:
           node-version: '16'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+
+      - name: Start application
+        run: |
+          # Inicia tu aplicación en segundo plano
+          npm start &
+          # Espera a que la aplicación esté lista
+          sleep 10  # Ajusta el tiempo si es necesario, según el tiempo de inicio de tu app
 
       - name: Run Selenium tests
-        env:
-          SELENIUM_REMOTE_URL: http://localhost:4444/wd/hub
         run: |
           npx mocha testGUI/paginaprincipaltest.spec.js
-        continue-on-error: true  # Permite que el trabajo continúe aunque las pruebas fallen
-
-      - name: Save test results
-        if: failure()
-        run: |
-          echo "Las pruebas fallaron, guardando resultados..."
-          # Puedes guardar logs, screenshots u otros archivos relevantes para depuración
