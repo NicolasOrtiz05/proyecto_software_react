@@ -23,6 +23,7 @@
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "test:unit": "mocha 'src/**/*.test.js'",
+    "test:selenium": "mocha testGUI/*.spec.js --timeout 30000",
     "test:load": "jmeter -n -t load_test.jmx -l results.jtl -e -o /tmp/report"
   },
   "eslintConfig": {

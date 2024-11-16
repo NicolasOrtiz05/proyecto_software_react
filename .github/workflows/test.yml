@@ -1,83 +1,43 @@
-name: Run Selenium GUI Tests
+name: Run Selenium Tests
 
 on:
   push:
     branches:
-      - main
+      - main  # Puedes usar cualquier rama que desees
   pull_request:
     branches:
-      - main
+      - main  # Si quieres ejecutar las pruebas cuando se haga un PR hacia la rama main
 
 jobs:
-  selenium-tests:
+  selenium-test:
     runs-on: ubuntu-latest
 
     services:
       selenium:
-        image: selenium/standalone-chrome:latest
-        ports:
-          - 4444:4444  # Exponemos el puerto 4444 para conectarnos a Selenium
+        image: selenium/standalone-chrome:latest  # Imagen oficial de Selenium con Chrome
         options: >-
-          --health-cmd "/opt/bin/check-grid.sh"
-          --health-interval 10s
-          --health-timeout 30s
-          --health-retries 5
-        volumes:
-          - /dev/shm:/dev/shm
+          --health-cmd="curl --silent --fail localhost:4444/wd/hub/status" 
+          --health-interval=30s
+          --health-timeout=10s
+          --health-retries=3
+        ports:
+          - 4444:4444  # Puerto por defecto donde Selenium expone su WebDriver
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      # Paso 1: Chequear el repositorio y obtener el código
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
+      # Paso 2: Configurar Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
-          cache: 'npm'
+          node-version: '18'  # Usa la versión de Node.js que necesites
 
+      # Paso 3: Instalar dependencias
       - name: Install dependencies
-        run: |
-          npm ci || npm install
-        env:
-          CI: true
+        run: npm install
 
-      - name: Start application
-        run: |
-          npm start &  # Inicia la aplicación en segundo plano
-          echo "Esperando a que la aplicación inicie..."
-          sleep 20  # Ajusta si es necesario el tiempo de espera
-
-      - name: Wait for application to be ready
-        timeout-minutes: 1
-        run: |
-          while ! curl -s http://localhost:3000 > /dev/null; do
-            sleep 20
-            echo "Esperando a que la aplicación esté lista..."
-          done
-
-      - name: Wait for Selenium to be ready
-        timeout-minutes: 1
-        run: |
-          while ! curl -s http://selenium:4444/wd/hub/status > /dev/null; do  # Cambiar localhost por selenium
-            sleep 20
-            echo "Esperando a que Selenium esté listo..."
-          done
-
+      # Paso 4: Ejecutar las pruebas con Mocha
       - name: Run Selenium tests
-        run: |
-          echo "Ejecutando pruebas..."
-          npx mocha testGUI/paginaprincipaltest.spec.js --timeout 30000
-        env:
-          GITHUB_ACTIONS: true
-          CI: true
-
-      - name: Upload test artifacts
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: |
-            testGUI/*.log
-            screenshots/
-            errorShots/
-          retention-days: 7
+        run: npm run test:selenium  # Ejecuta el script que has definido en package.json
