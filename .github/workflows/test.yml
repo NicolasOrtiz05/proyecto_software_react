@@ -3,10 +3,10 @@ name: Run Selenium Tests
 on:
   push:
     branches:
-      - main  # Puedes usar cualquier rama que desees
+      - main
   pull_request:
     branches:
-      - main  # Si quieres ejecutar las pruebas cuando se haga un PR hacia la rama main
+      - main
 
 jobs:
   selenium-test:
@@ -14,30 +14,30 @@ jobs:
 
     services:
       selenium:
-        image: selenium/standalone-chrome:latest  # Imagen oficial de Selenium con Chrome
+        image: selenium/standalone-chrome:latest
         options: >-
           --health-cmd="curl --silent --fail localhost:4444/wd/hub/status" 
           --health-interval=30s
           --health-timeout=10s
           --health-retries=3
         ports:
-          - 4444:4444  # Puerto por defecto donde Selenium expone su WebDriver
+          - 4444:4444
 
     steps:
-      # Paso 1: Chequear el repositorio y obtener el código
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Paso 2: Configurar Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # Usa la versión de Node.js que necesites
+          node-version: '18'
 
-      # Paso 3: Instalar dependencias
       - name: Install dependencies
         run: npm install
 
-      # Paso 4: Ejecutar las pruebas con Mocha
+      - name: Wait for Selenium to be ready
+        run: |
+          curl --silent --fail http://localhost:4444/wd/hub/status
+
       - name: Run Selenium tests
-        run: npm run test:selenium  # Ejecuta el script que has definido en package.json
+        run: npm run test:selenium

@@ -14,11 +14,12 @@ describe('paginaprincipaltest', function () {
 
     if (process.env.GITHUB_ACTIONS) {
       // Usamos el nombre del contenedor para Selenium
-      driver = await new Builder()
-        .forBrowser('chrome')
-        .setChromeOptions(options)
-        .usingServer('http://selenium:4444/wd/hub')  // Conexión al contenedor Selenium
-        .build();
+          driver = await new Builder()
+      .forBrowser('chrome')
+      .setChromeOptions(options)
+      .usingServer('http://localhost:4444/wd/hub')  // Usar localhost para evitar problemas de DNS
+      .build();
+
     } else {
       // Configuración local
       driver = await new Builder()
