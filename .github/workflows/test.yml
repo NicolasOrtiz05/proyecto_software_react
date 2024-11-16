@@ -14,50 +14,71 @@ jobs:
 
     services:
       selenium:
-        image: selenium/standalone-chrome
-        options: >
-          --health-cmd="curl --silent --show-error --fail http://localhost:4444/wd/hub/status" 
-          --health-timeout=30s 
-          --health-retries=3
-          --disable-dev-shm-usage
-          --no-sandbox
-          --remote-debugging-port=9222
+        image: selenium/standalone-chrome:latest
+        ports:
+          - 4444:4444
+          - 7900:7900
+        options: >-
+          --health-cmd "/opt/bin/check-grid.sh"
+          --health-interval 10s
+          --health-timeout 30s
+          --health-retries 5
+        volumes:
+          - /dev/shm:/dev/shm
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
+          cache: 'npm'
 
       - name: Install dependencies
         run: |
-          npm install
+          npm ci || npm install
+        env:
+          CI: true
 
       - name: Start application
         run: |
-          # Inicia tu aplicación en segundo plano
-          npm start &  # Esto iniciará la app en segundo plano
-          # Espera a que la aplicación esté lista
-          sleep 10  # Ajusta el tiempo si es necesario
+          npm start &
+          echo "Esperando a que la aplicación inicie..."
+          sleep 15
 
       - name: Wait for application to be ready
+        timeout-minutes: 1
         run: |
-          # Asegúrate de que tu aplicación esté lista para recibir solicitudes
-          until curl --silent --fail http://localhost:3000; do
-            echo "Waiting for application to be ready..."
-            sleep 5
+          while ! curl -s http://localhost:3000 > /dev/null; do
+            sleep 2
+            echo "Esperando a que la aplicación esté lista..."
           done
 
-      - name: Wait for Selenium service to be ready
+      - name: Wait for Selenium to be ready
+        timeout-minutes: 1
         run: |
-          # Asegúrate de que Selenium esté disponible antes de ejecutar las pruebas
-          until curl --silent --fail http://localhost:4444/wd/hub/status; do
-            echo "Waiting for Selenium to be ready..."
-            sleep 5
+          while ! curl -s http://localhost:4444/wd/hub/status > /dev/null; do
+            sleep 2
+            echo "Esperando a que Selenium esté listo..."
           done
 
       - name: Run Selenium tests
         run: |
-          npx mocha testGUI/paginaprincipaltest.spec.js
+          echo "Ejecutando pruebas..."
+          npx mocha testGUI/paginaprincipaltest.spec.js --timeout 30000
+        env:
+          GITHUB_ACTIONS: true
+          CI: true
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-results
+          path: |
+            testGUI/*.log
+            screenshots/
+            errorShots/
+          retention-days: 7
