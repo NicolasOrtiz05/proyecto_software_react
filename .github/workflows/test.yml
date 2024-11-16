@@ -15,7 +15,13 @@ jobs:
     services:
       selenium:
         image: selenium/standalone-chrome
-        options: --health-cmd="curl --silent --show-error --fail http://localhost:4444/wd/hub/status" --health-timeout=30s --health-retries=3
+        options: |
+          --health-cmd="curl --silent --show-error --fail http://localhost:4444/wd/hub/status" 
+          --health-timeout=30s 
+          --health-retries=3
+          --disable-dev-shm-usage
+          --no-sandbox
+          --remote-debugging-port=9222
 
     steps:
       - uses: actions/checkout@v2
@@ -33,8 +39,16 @@ jobs:
         run: |
           # Inicia tu aplicación en segundo plano
           npm start &
-          # Espera a que la aplicación esté lista
-          sleep 10  # Ajusta el tiempo si es necesario, según el tiempo de inicio de tu app
+          # Espera a que la aplicación esté lista (ajusta el tiempo si es necesario)
+          sleep 10
+
+      - name: Wait for application to be ready
+        run: |
+          until curl --silent --fail http://localhost:3000; do
+          echo "Waiting for application to be ready..."
+          sleep 5
+          done
+        
 
       - name: Run Selenium tests
         run: |
