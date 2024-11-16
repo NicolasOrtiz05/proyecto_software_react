@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:8084/promociones'; 
+const BASE_URL = 'http://localhost:8084/promociones';
 
 // Crear una promoción
 export const crearPromocion = async (promocion) => {
@@ -17,7 +17,14 @@ export const crearPromocion = async (promocion) => {
 export const obtenerPromociones = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/todas`);
-    return response.data;
+    const data = response.data;
+
+    if (Array.isArray(data)) {
+      return data;
+    } else {
+      console.error('Datos de promociones no válidos:', data);
+      return [];
+    }
   } catch (error) {
     console.error('Error al obtener promociones:', error);
     throw error;

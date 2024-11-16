@@ -20,15 +20,13 @@ const Auth = () => {
 				if (user.email === adminEmail) {
 					navigate('/admin');
 				} else {
-					
 					const pedidosRef = dbRef(database, 'pedidos/' + user.uid);
 					onValue(pedidosRef, (snapshot) => {
 						const data = snapshot.val();
 						if (data) {
-							
 							setPedidos(Array.isArray(data) ? data : Object.values(data));
 						} else {
-							setPedidos([]); 
+							setPedidos([]);
 						}
 					});
 				}
@@ -36,17 +34,22 @@ const Auth = () => {
 				setUser(null);
 			}
 		});
-	
+
 		return () => unsubscribe();
 	}, [navigate]);
-	
 
 	useEffect(() => {
-		
 		const promotionsRef = dbRef(database, 'promotions');
 		const unsubscribe = onValue(promotionsRef, (snapshot) => {
 			if (snapshot.exists()) {
-				setPromotion(snapshot.val());
+				const data = snapshot.val();
+				// Asegúrate de que los datos sean del tipo correcto
+				if (typeof data === 'string') {
+					setPromotion(data);
+				} else {
+					console.error('Datos de promoción no válidos:', data);
+					setPromotion('');
+				}
 			} else {
 				setPromotion('');
 			}
@@ -169,32 +172,32 @@ const Auth = () => {
 						</div>
 					)}
 					{user.email !== adminEmail && (
-    <div>
-        <h3>Mis Pedidos</h3>
-        {pedidos && pedidos.length > 0 ? (
-            pedidos.map((pedido, index) => (
-                <div key={index} className="pedido-item">
-                    <h4>Pedido {index + 1}</h4>
-                    <p><strong>Total:</strong> ${pedido.total}</p>
-                    <p><strong>Estado:</strong> {pedido.estado || 'No disponible'}</p> {/* Asumiendo que cada pedido puede tener un estado */}
-                    <ul>
-                        {pedido.productos && pedido.productos.length > 0 ? (
-                            pedido.productos.map((producto, i) => (
-                                <li key={i}>
-                                    {producto.titulo} - {producto.cantidad} x ${producto.precio} = ${producto.subtotal}
-                                </li>
-                            ))
-                        ) : (
-                            <p>No hay productos en este pedido.</p>
-                        )}
-                    </ul>
-                </div>
-            ))
-        ) : (
-            <p>No has realizado ningún pedido.</p>
-        )}
-    </div>
-)}
+						<div>
+							<h3>Mis Pedidos</h3>
+							{pedidos && pedidos.length > 0 ? (
+								pedidos.map((pedido, index) => (
+									<div key={index} className="pedido-item">
+										<h4>Pedido {index + 1}</h4>
+										<p><strong>Total:</strong> ${pedido.total}</p>
+										<p><strong>Estado:</strong> {pedido.estado || 'No disponible'}</p> {/* Asumiendo que cada pedido puede tener un estado */}
+										<ul>
+											{pedido.productos && pedido.productos.length > 0 ? (
+												pedido.productos.map((producto, i) => (
+													<li key={i}>
+														{producto.titulo} - {producto.cantidad} x ${producto.precio} = ${producto.subtotal}
+													</li>
+												))
+											) : (
+												<p>No hay productos en este pedido.</p>
+											)}
+										</ul>
+									</div>
+								))
+							) : (
+								<p>No has realizado ningún pedido.</p>
+							)}
+						</div>
+					)}
 				</div>
 			) : (
 				<div className="login-container">
@@ -215,8 +218,5 @@ const Auth = () => {
 		</main>
 	);
 };
-
-
-
 
 export default Auth;
