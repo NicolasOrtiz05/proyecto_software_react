@@ -38,18 +38,27 @@ jobs:
       - name: Start application
         run: |
           # Inicia tu aplicación en segundo plano
-          npm start &
-          # Espera a que la aplicación esté lista (ajusta el tiempo si es necesario)
-          sleep 10
+          npm start &  # Esto iniciará la app en segundo plano
+          # Espera a que la aplicación esté lista
+          sleep 10  # Ajusta el tiempo si es necesario
 
       - name: Wait for application to be ready
         run: |
+          # Asegúrate de que tu aplicación esté lista para recibir solicitudes
           until curl --silent --fail http://localhost:3000; do
-          echo "Waiting for application to be ready..."
-          sleep 5
+            echo "Waiting for application to be ready..."
+            sleep 5
           done
-        
+
+      - name: Wait for Selenium service to be ready
+        run: |
+          # Asegúrate de que Selenium esté disponible antes de ejecutar las pruebas
+          until curl --silent --fail http://localhost:4444/wd/hub/status; do
+            echo "Waiting for Selenium to be ready..."
+            sleep 5
+          done
 
       - name: Run Selenium tests
         run: |
           npx mocha testGUI/paginaprincipaltest.spec.js
+
