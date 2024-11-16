@@ -16,15 +16,14 @@ jobs:
       selenium:
         image: selenium/standalone-chrome:latest
         ports:
-          - 4444:4444  # Puerto de Selenium
-          - 7900:7900  # Puerto de VNC (si quieres visualizar el navegador)
+          - 4444:4444  # Exponemos el puerto 4444 para conectarnos a Selenium
         options: >-
           --health-cmd "/opt/bin/check-grid.sh"
           --health-interval 10s
           --health-timeout 30s
           --health-retries 5
         volumes:
-          - /dev/shm:/dev/shm  # Evita problemas con la memoria compartida
+          - /dev/shm:/dev/shm
 
     steps:
       - name: Checkout code
@@ -46,21 +45,21 @@ jobs:
         run: |
           npm start &  # Inicia la aplicación en segundo plano
           echo "Esperando a que la aplicación inicie..."
-          sleep 15  # Ajusta si es necesario el tiempo de espera
+          sleep 20  # Ajusta si es necesario el tiempo de espera
 
       - name: Wait for application to be ready
         timeout-minutes: 1
         run: |
           while ! curl -s http://localhost:3000 > /dev/null; do
-            sleep 2
+            sleep 20
             echo "Esperando a que la aplicación esté lista..."
           done
 
       - name: Wait for Selenium to be ready
         timeout-minutes: 1
         run: |
-          while ! curl -s http://localhost:4444/wd/hub/status > /dev/null; do
-            sleep 2
+          while ! curl -s http://selenium:4444/wd/hub/status > /dev/null; do  # Cambiar localhost por selenium
+            sleep 20
             echo "Esperando a que Selenium esté listo..."
           done
 

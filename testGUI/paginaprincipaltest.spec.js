@@ -12,17 +12,12 @@ describe('paginaprincipaltest', function () {
     options.addArguments('--ignore-certificate-errors');
     options.addArguments('--allow-insecure-localhost');
 
-    // Configuración para CI (GitHub Actions)
     if (process.env.GITHUB_ACTIONS) {
-      options.addArguments('--headless');  // Modo headless para CI
-      options.addArguments('--disable-gpu');
-      options.addArguments('--no-sandbox');
-      options.addArguments('--disable-dev-shm-usage');
-      
+      // Usamos el nombre del contenedor para Selenium
       driver = await new Builder()
         .forBrowser('chrome')
         .setChromeOptions(options)
-        .usingServer('http://localhost:4444/wd/hub')  // Usamos el servidor Selenium en Docker
+        .usingServer('http://selenium:4444/wd/hub')  // Conexión al contenedor Selenium
         .build();
     } else {
       // Configuración local
