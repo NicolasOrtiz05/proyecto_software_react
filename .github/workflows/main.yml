@@ -40,10 +40,10 @@ jobs:
         start: npm start
         wait-on: http://localhost:3000
         wait-on-timeout: 60
-        config-file: cypress.json
+        config-file: cypress.json 
 
   load-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest 
 
     steps:
     - name: Checkout code
@@ -60,3 +60,4 @@ jobs:
       with:
         name: jmeter-report
         path: /tmp/report
+        
