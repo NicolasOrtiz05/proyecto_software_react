@@ -31,4 +31,4 @@ jobs:
 
       - name: Run Selenium tests
         run: |
-          npx mocha test/testgui.spec.js
+          npx mocha test/paginaprincipaltest.spec.js
