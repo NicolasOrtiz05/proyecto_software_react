@@ -8,23 +8,21 @@ describe('paginaprincipaltest', function () {
   beforeEach(async function () {
     const options = new chrome.Options();
     
-    // Opciones básicas que siempre necesitamos
+    // Opciones básicas
     options.addArguments('--ignore-certificate-errors');
     options.addArguments('--allow-insecure-localhost');
 
-    // Verificar si estamos en GitHub Actions
+    // Configuración para CI (GitHub Actions)
     if (process.env.GITHUB_ACTIONS) {
-      // Opciones adicionales para CI
-      options.addArguments('--headless');
+      options.addArguments('--headless');  // Modo headless para CI
       options.addArguments('--disable-gpu');
       options.addArguments('--no-sandbox');
       options.addArguments('--disable-dev-shm-usage');
       
-      // Conectar al contenedor de Selenium en CI
       driver = await new Builder()
         .forBrowser('chrome')
         .setChromeOptions(options)
-        .usingServer('http://localhost:4444/wd/hub')
+        .usingServer('http://localhost:4444/wd/hub')  // Usamos el servidor Selenium en Docker
         .build();
     } else {
       // Configuración local
@@ -41,7 +39,6 @@ describe('paginaprincipaltest', function () {
     }
   });
 
-  // El resto de tu código de prueba se mantiene igual...
   it('paginaprincipaltest', async function () {
     await driver.get("http://localhost:3000/");
     await driver.manage().window().setRect({ width: 1382, height: 736 });
@@ -64,7 +61,7 @@ describe('paginaprincipaltest', function () {
   });
 });
 
-// Tu función auxiliar clickWhenVisible se mantiene igual
+// Función auxiliar para esperar hasta que el elemento sea visible y clickeable
 async function clickWhenVisible(driver, locator, timeout = 10000) {
   await driver.wait(until.elementLocated(locator), timeout);
   

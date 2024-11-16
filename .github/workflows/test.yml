@@ -16,15 +16,15 @@ jobs:
       selenium:
         image: selenium/standalone-chrome:latest
         ports:
-          - 4444:4444
-          - 7900:7900
+          - 4444:4444  # Puerto de Selenium
+          - 7900:7900  # Puerto de VNC (si quieres visualizar el navegador)
         options: >-
           --health-cmd "/opt/bin/check-grid.sh"
           --health-interval 10s
           --health-timeout 30s
           --health-retries 5
         volumes:
-          - /dev/shm:/dev/shm
+          - /dev/shm:/dev/shm  # Evita problemas con la memoria compartida
 
     steps:
       - name: Checkout code
@@ -44,9 +44,9 @@ jobs:
 
       - name: Start application
         run: |
-          npm start &
+          npm start &  # Inicia la aplicación en segundo plano
           echo "Esperando a que la aplicación inicie..."
-          sleep 15
+          sleep 15  # Ajusta si es necesario el tiempo de espera
 
       - name: Wait for application to be ready
         timeout-minutes: 1
