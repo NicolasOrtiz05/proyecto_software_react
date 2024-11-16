@@ -1,7 +1,8 @@
 /* global Swal, Toastify */
 import React, { useEffect } from 'react';
-import { auth, onAuthStateChanged, set, dbRef, database, push } from '../services/firebase-config';
+import { auth, onAuthStateChanged } from '../services/firebase-config';
 import '../index.css';
+import { createPedido } from '../services/pedidoService';
 
 
 const Cart = ({ productosEnCarrito, setProductosEnCarrito }) => {
@@ -61,24 +62,19 @@ const Cart = ({ productosEnCarrito, setProductosEnCarrito }) => {
 
                 const total = productosValidados.reduce((acc, producto) => acc + producto.subtotal, 0);
                 const colombiaTime = new Date().toLocaleString("en-US", { timeZone: "America/Bogota" });
-
                 // Crear una referencia para los pedidos del usuario
-                const userOrdersRef = dbRef(database, `pedidos/${user.uid}`);
-
-                // Generar una nueva entrada con ID único
-                const newOrderRef = push(userOrdersRef);
-
+    
                 const pedido = {
-                    uid: user.uid,
+                    id:"",
+                    fecha: colombiaTime,
                     productos: productosValidados,
                     total: total,
-                    fecha: colombiaTime,
-                    estado: 'pendiente' // Agregamos un estado inicial al pedido
+                    uidUsuario: user.uid,
+                    estado: 'pendiente'
                 };
+                console.log("Objeto pedido antes de enviarlo:", pedido);
 
-                // Guardar el pedido con el ID único generado
-                set(newOrderRef, pedido)
-                    .then(() => {
+                createPedido(pedido).then(() => {
                         Swal.fire({
                             title: '¡Compra realizada!',
                             text: 'Tu pedido ha sido guardado con éxito.',
@@ -125,7 +121,6 @@ const Cart = ({ productosEnCarrito, setProductosEnCarrito }) => {
             }
         });
     };
-
     const total = productosEnCarrito.reduce((acc, producto) => acc + (producto.precio * producto.cantidad), 0);
 
     return (

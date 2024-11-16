@@ -1,6 +1,10 @@
 /* global Swal, Toastify */
 import React, { useEffect, useState } from 'react';
-import { onAuthStateChanged, auth, dbRef, database, get, set, ref, uploadBytes, getDownloadURL, storage, remove, deleteObject, signOut, onValue } from '../services/firebase-config';
+import { onAuthStateChanged, auth, dbRef, database, set, ref, uploadBytes, getDownloadURL, storage, signOut } from '../services/firebase-config';
+import { createProducto, getAllProductos, updateProducto, deleteProducto, getProductoById } from '../services/productoServise';
+import { getAllPedidos, getPedidoById, createPedido, deletePedido, updatePedido } from '../services/pedidoService';
+import { crearPromocion, obtenerPromociones, obtenerPromocionPorId, editarPromocion, eliminarPromocion } from '../services/promocionesService';
+
 
 const Admin = () => {
 	const [productos, setProductos] = useState([]);
@@ -9,69 +13,79 @@ const Admin = () => {
 	const [pedidos, setPedidos] = useState([]);
 
 	useEffect(() => {
-		const unsubscribe = onAuthStateChanged(auth, (user) => {
+		const unsubscribe = onAuthStateChanged(auth, async (user) => { // Añadido async aquí
 			if (!user) {
 				window.location.href = '/auth';
 			} else {
-
-				const pedidosRef = dbRef(database, 'pedidos');
-				onValue(pedidosRef, (snapshot) => {
-					if (snapshot.exists()) {
-						const pedidosData = snapshot.val();
-						const todosLosPedidos = [];
-
-						Object.keys(pedidosData).forEach(userId => {
-							const pedidosUsuario = pedidosData[userId];
-							Object.keys(pedidosUsuario).forEach(pedidoId => {
-								todosLosPedidos.push({
-									id: pedidoId,
-									userId: userId,
-									...pedidosUsuario[pedidoId]
-								});
-							});
-						});
-
+				try {
+					// Esperamos a que se resuelva la promesa de getAllPedidos
+					const todosLosPedidos = await getAllPedidos(); 
+					
+					if (todosLosPedidos.length > 0) {
+						console.log("llega?");
+						// Ordenamos por fecha
 						todosLosPedidos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-						setPedidos(todosLosPedidos);
+						setPedidos(todosLosPedidos); // Actualizamos el estado
 					} else {
-						setPedidos([]);
+						setPedidos([]); // Si no hay pedidos, se setea un array vacío
 					}
-				});
+				} catch (error) {
+					console.error("Error al cargar los pedidos:", error);
+				}
 			}
 		});
-
 		cargarProductos();
-		return () => unsubscribe();
+		return () => unsubscribe(); // Limpiar el listener
 	}, []);
+	
 
 	const handleSendPromotion = () => {
-		if (promotion.trim() !== '') {
-			set(dbRef(database, 'promotions'), promotion.trim())
-				.then(() => {
-					Toastify({
-						text: 'Promoción enviada exitosamente',
-						style: {
-							background: 'linear-gradient(to right, #00b09b, #96c93d)',
-						},
-					}).showToast();
-					setPromotion('');
-				})
-				.catch((error) => {
-					console.error('Error al enviar la promoción:', error);
-					Toastify({
-						text: 'Error al enviar la promoción',
-						style: {
-							background: 'linear-gradient(to right, #ff0000, #ff5555)',
-						},
-					}).showToast();
-				});
+		const promotionText = document.getElementById('promotion-text').value.trim();
+		const promotionDate = document.getElementById('promotion-date').value;
+		const promotionPercentage = document.getElementById('promotion-percentage').value;
+		const promotionType = document.getElementById('promotion-type').value;
+	  
+		if (promotionText && promotionDate && promotionPercentage && promotionType) {
+		  const promotionData = {
+			id:"",
+			descripcion: promotionText,
+			tipo: promotionType,
+			percentage: promotionPercentage,
+			date: promotionDate
+			
+		  };
+		  crearPromocion(promotionData).then(() => {
+			  Toastify({
+				text: 'Promoción enviada exitosamente',
+				style: {
+				  background: 'linear-gradient(to right, #00b09b, #96c93d)',
+				},
+			  }).showToast();
+			  setPromotion('');
+			})
+			.catch((error) => {
+			  console.error('Error al enviar la promoción:', error);
+			  Toastify({
+				text: 'Error al enviar la promoción',
+				style: {
+				  background: 'linear-gradient(to right, #ff0000, #ff5555)',
+				},
+			  }).showToast();
+			});
+		} else {
+		  Toastify({
+			text: 'Por favor completa todos los campos',
+			style: {
+			  background: 'linear-gradient(to right, #ff0000, #ff5555)',
+			},
+		  }).showToast();
 		}
-	};
+	  };
+	  
 
 	const cargarProductos = () => {
-		get(dbRef(database, 'productos')).then((snapshot) => {
-			if (snapshot.exists()) {
-				const productos = Object.values(snapshot.val());
+		getAllProductos().then(productos => {
+			if (productos && productos.length > 0) {
 				cargarProductosConImagenes(productos);
 			} else {
 				setProductos([]);
@@ -107,209 +121,127 @@ const Admin = () => {
 		const titulo = document.getElementById('producto-titulo').value;
 		const precio = document.getElementById('producto-precio').value;
 		const tipo = document.getElementById('producto-tipo').value;
-		const imagen = document.getElementById('producto-imagen').files[0];
+		const imagenI = document.getElementById('producto-imagen').files[0];
 
-		if (!titulo || !precio || !tipo || !imagen) {
+		if (!titulo || !precio || !tipo || !imagenI) {
 			Toastify({
 				text: "Por favor completa todos los campos",
 				style: {
 					background: "linear-gradient(to right, #ff0000, #ff5555)",
 				}
 			}).showToast();
+
 			return;
 		}
+		const id = 'producto_' + new Date().getTime(); // igual en el back lo reescribo
+		const imagen = `${imagenI.name.split('.')[0]}_${new Date().getTime()}.${imagenI.name.split('.').pop()}`;
+		const nuevoProducto = JSON.stringify({ id, titulo, precio, imagen, tipo });
 
-		const productoId = 'producto_' + new Date().getTime();
-		const uniqueImageName = `${imagen.name.split('.')[0]}_${new Date().getTime()}.${imagen.name.split('.').pop()}`;
-		const storageReference = ref(storage, `/${tipo}/${uniqueImageName}`);
-
-		uploadBytes(storageReference, imagen).then((snapshot) => {
-			getDownloadURL(snapshot.ref).then((url) => {
-				const nuevoProducto = {
-					id: productoId,
-					titulo: titulo,
-					precio: Number(precio),
-					imagen: uniqueImageName,
-					tipo: tipo,
-					url: url
-				};
-
-				set(dbRef(database, 'productos/' + productoId), nuevoProducto).then(() => {
-					Toastify({
-						text: "Producto añadido exitosamente",
-						style: {
-							background: "linear-gradient(to right, #00b09b, #96c93d)",
-						}
-					}).showToast();
-					cargarProductos();
-					document.getElementById('producto-titulo').value = '';
-					document.getElementById('producto-precio').value = '';
-					document.getElementById('producto-tipo').value = '';
-					document.getElementById('producto-imagen').value = '';
-				}).catch((error) => {
-					console.error('Error al añadir producto:', error);
-					Toastify({
-						text: "Error al añadir producto",
-						style: {
-							background: "linear-gradient(to right, #ff0000, #ff5555)",
-						}
-					}).showToast();
-				});
-			});
-		}).catch((error) => {
-			console.error('Error al subir imagen:', error);
-			Toastify({
-				text: "Error al subir imagen",
-				style: {
-					background: "linear-gradient(to right, #ff0000, #ff5555)",
-				}
-			}).showToast();
-		});
+		createProducto(nuevoProducto, imagenI);
+		cargarProductos();
+		
 	};
 
 	const editarProducto = (productoId) => {
 		setEditingProductId(productoId);
-		get(dbRef(database, 'productos/' + productoId)).then((snapshot) => {
-			if (snapshot.exists()) {
-				const producto = snapshot.val();
-
-				Swal.fire({
-					title: 'Editar Producto',
-					html: `
-                        <input 
-                            type="text" 
-                            id="edit-titulo" 
-                            class="swal2-input" 
-                            placeholder="Título del producto" 
-                            value="${producto.titulo}"
-                        >
-                        <input 
-                            type="number" 
-                            id="edit-precio" 
-                            class="swal2-input" 
-                            placeholder="Precio del producto" 
-                            value="${producto.precio}"
-                        >
-                        <select id="edit-tipo" class="swal2-input">
-                            <option value="celulares" ${producto.tipo === 'celulares' ? 'selected' : ''}>Celulares</option>
-                            <option value="computadores" ${producto.tipo === 'computadores' ? 'selected' : ''}>Computadores</option>
-                            <option value="audifonos" ${producto.tipo === 'audifonos' ? 'selected' : ''}>Audífonos</option>
-                        </select>
-                        <input 
-                            type="file" 
-                            id="edit-imagen" 
-                            class="swal2-input"
-                        >
-                    `,
-					showCancelButton: true,
-					confirmButtonText: 'Guardar',
-					cancelButtonText: 'Cancelar',
-					preConfirm: () => {
-						const titulo = document.getElementById('edit-titulo').value;
-						const precio = document.getElementById('edit-precio').value;
-						const tipo = document.getElementById('edit-tipo').value;
-						const imagen = document.getElementById('edit-imagen').files[0];
-						if (!titulo || !precio || !tipo) {
-							Swal.showValidationMessage('Por favor completa todos los campos');
-							return false;
+		
+		// Obtener el producto actual desde el backend
+		getProductoById(productoId)
+		  .then((producto) => {
+			if (producto) {
+			  Swal.fire({
+				title: 'Editar Producto',
+				html: `
+				  <input 
+					  type="text" 
+					  id="edit-titulo" 
+					  class="swal2-input" 
+					  placeholder="Título del producto" 
+					  value="${producto.titulo}"
+				  >
+				  <input 
+					  type="number" 
+					  id="edit-precio" 
+					  class="swal2-input" 
+					  placeholder="Precio del producto" 
+					  value="${producto.precio}"
+				  >
+				  <select id="edit-tipo" class="swal2-input">
+					  <option value="celulares" ${producto.tipo === 'celulares' ? 'selected' : ''}>Celulares</option>
+					  <option value="computadores" ${producto.tipo === 'computadores' ? 'selected' : ''}>Computadores</option>
+					  <option value="audifonos" ${producto.tipo === 'audifonos' ? 'selected' : ''}>Audífonos</option>
+				  </select>
+				  <input 
+					  type="file" 
+					  id="edit-imagen" 
+					  class="swal2-input"
+				  >
+				`,
+				showCancelButton: true,
+				confirmButtonText: 'Guardar',
+				cancelButtonText: 'Cancelar',
+				preConfirm: () => {
+				  const titulo = document.getElementById('edit-titulo').value;
+				  const precio = document.getElementById('edit-precio').value;
+				  const tipo = document.getElementById('edit-tipo').value;
+				  const imagenI = document.getElementById('edit-imagen').files[0];
+	  
+				  if (!titulo || !precio || !tipo) {
+					Swal.showValidationMessage('Por favor completa todos los campos');
+					return false;
+				  }
+	  
+				  return { titulo, precio, tipo, imagenI };
+				}
+			  }).then((result) => {
+				if (result.isConfirmed) {
+				  const { titulo, precio, tipo, imagenI } = result.value;
+	  
+				  // Crear el nuevo objeto producto
+				  const productoActualizado = {
+					...producto,
+					titulo,
+					precio,
+					tipo,
+				  };
+	  
+				  // Llamar a la función updateProducto con los datos actualizados
+				  updateProducto(productoActualizado, imagenI)
+					.then(() => {
+					  Toastify({
+						text: "Producto actualizado exitosamente",
+						style: {
+						  background: "linear-gradient(to right, #00b09b, #96c93d)",
 						}
-						return { titulo, precio, tipo, imagen };
-					}
-				}).then((result) => {
-					if (result.isConfirmed) {
-						const { titulo, precio, tipo, imagen } = result.value;
-
-						if (imagen) {
-							const uniqueImageName = `${imagen.name.split('.')[0]}_${new Date().getTime()}.${imagen.name.split('.').pop()}`;
-							const storageReference = ref(storage, `/${tipo}/${uniqueImageName}`);
-							const oldImageRef = ref(storage, `/${producto.tipo}/${producto.imagen}`);
-
-							// Subir nueva imagen y eliminar la antigua
-							uploadBytes(storageReference, imagen).then((snapshot) => {
-								getDownloadURL(snapshot.ref).then((url) => {
-									set(dbRef(database, 'productos/' + productoId), {
-										id: productoId, // Asegúrate de mantener el id
-										titulo: titulo,
-										precio: Number(precio),
-										tipo: tipo,
-										imagen: uniqueImageName
-									}).then(() => {
-										// Eliminar la imagen antigua
-										deleteObject(oldImageRef).catch((error) => {
-											console.error('Error al eliminar la imagen antigua:', error);
-										});
-
-										Toastify({
-											text: "Producto actualizado exitosamente",
-											style: {
-												background: "linear-gradient(to right, #00b09b, #96c93d)",
-											}
-										}).showToast();
-										cargarProductos();
-									}).catch((error) => {
-										console.error('Error al actualizar producto:', error);
-										Toastify({
-											text: "Error al actualizar producto",
-											style: {
-												background: "linear-gradient(to right, #ff0000, #ff5555)",
-											}
-										}).showToast();
-									});
-								});
-							}).catch((error) => {
-								console.error('Error al subir imagen:', error);
-								Toastify({
-									text: "Error al subir imagen",
-									style: {
-										background: "linear-gradient(to right, #ff0000, #ff5555)",
-									}
-								}).showToast();
-							});
-						} else {
-							set(dbRef(database, 'productos/' + productoId), {
-								id: productoId, // Asegúrate de mantener el id
-								titulo: titulo,
-								precio: Number(precio),
-								tipo: tipo,
-								imagen: producto.imagen
-							}).then(() => {
-								Toastify({
-									text: "Producto actualizado exitosamente",
-									style: {
-										background: "linear-gradient(to right, #00b09b, #96c93d)",
-									}
-								}).showToast();
-								cargarProductos();
-							}).catch((error) => {
-								console.error('Error al actualizar producto:', error);
-								Toastify({
-									text: "Error al actualizar producto",
-									style: {
-										background: "linear-gradient(to right, #ff0000, #ff5555)",
-									}
-								}).showToast();
-							});
+					  }).showToast();
+					  cargarProductos(); // Recargar la lista de productos
+					})
+					.catch((error) => {
+					  console.error('Error al actualizar producto:', error);
+					  Toastify({
+						text: "Error al actualizar producto",
+						style: {
+						  background: "linear-gradient(to right, #ff0000, #ff5555)",
 						}
-					}
-				});
+					  }).showToast();
+					});
+				}
+			  });
 			}
-		}).catch((error) => {
+		  })
+		  .catch((error) => {
 			console.error('Error al obtener producto:', error);
 			Toastify({
-				text: "Error al cargar datos del producto",
-				style: {
-					background: "linear-gradient(to right, #ff0000, #ff5555)",
-				}
+			  text: "Error al cargar datos del producto",
+			  style: {
+				background: "linear-gradient(to right, #ff0000, #ff5555)",
+			  }
 			}).showToast();
-		});
-	};
+		  });
+	  };
+	  
 
 	const eliminarProducto = (productoId) => {
-		get(dbRef(database, 'productos/' + productoId)).then((snapshot) => {
-			if (snapshot.exists()) {
-				const producto = snapshot.val();
-				const imageRef = ref(storage, `/${producto.tipo}/${producto.imagen}`);
-
 				Swal.fire({
 					title: '¿Estás seguro?',
 					text: 'Esta acción no se puede deshacer',
@@ -319,42 +251,24 @@ const Admin = () => {
 					cancelButtonText: 'Cancelar'
 				}).then((result) => {
 					if (result.isConfirmed) {
-						remove(dbRef(database, 'productos/' + productoId))
-							.then(() => {
-								// Eliminar la imagen del producto
-								deleteObject(imageRef).catch((error) => {
-									console.error('Error al eliminar la imagen:', error);
-								});
-
-								Toastify({
-									text: "Producto eliminado exitosamente",
-									style: {
-										background: "linear-gradient(to right, #00b09b, #96c93d)",
-									}
-								}).showToast();
-								cargarProductos();
-							})
-							.catch((error) => {
-								console.error('Error al eliminar producto:', error);
-								Toastify({
-									text: "Error al eliminar producto",
-									style: {
-										background: "linear-gradient(to right, #ff0000, #ff5555)",
-									}
-								}).showToast();
-							});
-					}
-				});
-			}
-		}).catch((error) => {
-			console.error('Error al obtener producto:', error);
-			Toastify({
-				text: "Error al cargar datos del producto",
-				style: {
-					background: "linear-gradient(to right, #ff0000, #ff5555)",
-				}
-			}).showToast();
-		});
+						deleteProducto(productoId).then(() => {
+							Toastify({
+								text: "Producto eliminado exitosamente",
+								style: {
+									background: "linear-gradient(to right, #00b09b, #96c93d)",
+								}
+							}).showToast();
+							cargarProductos();
+						}).catch((error) => {
+							console.error('Error al eliminar producto:', error);
+							Toastify({
+								text: "Error al eliminar producto",
+								style: {
+									background: "linear-gradient(to right, #ff0000, #ff5555)",
+								}
+							}).showToast();
+						});
+					}})
 	};
 
 	const handleLogout = () => {
@@ -431,6 +345,24 @@ const Admin = () => {
 					value={promotion}
 					onChange={(e) => setPromotion(e.target.value)}
 				></textarea>
+				<input
+					type="date"
+					id="promotion-date"
+					className="input-estilo"
+					placeholder="Fecha de la promoción"
+				/>
+				<input
+					type="number"
+					id="promotion-percentage"
+					className="input-estilo"
+					placeholder="Porcentaje de descuento"
+				/>
+				<select id="promotion-type" className="input-estilo">
+					<option value="">Selecciona el tipo de producto</option>
+					<option value="celulares">Celulares</option>
+					<option value="computadores">Computadores</option>
+					<option value="audifonos">Audífonos</option>
+				</select>
 				<button
 					id="btn-send-promotion"
 					className="boton-admin"
@@ -439,6 +371,7 @@ const Admin = () => {
 					<i className="bi bi-megaphone-fill"></i> Enviar Promoción
 				</button>
 			</div>
+
 
 			<div className="admin-actions">
 				<h3>Pedidos de Todos los Usuarios</h3>
