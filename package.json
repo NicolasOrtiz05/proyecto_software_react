@@ -23,7 +23,6 @@
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "test:unit": "mocha 'src/**/*.test.js'",
-    "test:selenium": "mocha testGUI/*.spec.js --timeout 30000",
     "test:load": "jmeter -n -t load_test.jmx -l results.jtl -e -o /tmp/report"
   },
   "eslintConfig": {
@@ -49,7 +48,6 @@
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
     "chai": "^5.1.2",
-    "chromedriver": "^131.0.0",
     "cypress": "^6.9.1",
     "mocha": "^8.4.0",
     "selenium-webdriver": "^4.26.0"
