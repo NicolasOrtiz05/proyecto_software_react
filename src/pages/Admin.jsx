@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { onAuthStateChanged, auth, dbRef, database, set, ref, uploadBytes, getDownloadURL, storage, signOut } from '../services/firebase-config';
 import { createProducto, getAllProductos, updateProducto, deleteProducto, getProductoById } from '../services/productoServise';
 import { getAllPedidos, getPedidoById, createPedido, deletePedido, updatePedido } from '../services/pedidoService';
+import { crearPromocion, obtenerPromociones, obtenerPromocionPorId, editarPromocion, eliminarPromocion } from '../services/promocionesService';
+
 
 const Admin = () => {
 	const [productos, setProductos] = useState([]);
@@ -38,28 +40,48 @@ const Admin = () => {
 	
 
 	const handleSendPromotion = () => {
-		if (promotion.trim() !== '') {
-			set(dbRef(database, 'promotions'), promotion.trim())
-				.then(() => {
-					Toastify({
-						text: 'Promoción enviada exitosamente',
-						style: {
-							background: 'linear-gradient(to right, #00b09b, #96c93d)',
-						},
-					}).showToast();
-					setPromotion('');
-				})
-				.catch((error) => {
-					console.error('Error al enviar la promoción:', error);
-					Toastify({
-						text: 'Error al enviar la promoción',
-						style: {
-							background: 'linear-gradient(to right, #ff0000, #ff5555)',
-						},
-					}).showToast();
-				});
+		const promotionText = document.getElementById('promotion-text').value.trim();
+		const promotionDate = document.getElementById('promotion-date').value;
+		const promotionPercentage = document.getElementById('promotion-percentage').value;
+		const promotionType = document.getElementById('promotion-type').value;
+	  
+		if (promotionText && promotionDate && promotionPercentage && promotionType) {
+		  const promotionData = {
+			id:"",
+			descripcion: promotionText,
+			tipo: promotionType,
+			percentage: promotionPercentage,
+			date: promotionDate
+			
+		  };
+		  crearPromocion(promotionData).then(() => {
+			  Toastify({
+				text: 'Promoción enviada exitosamente',
+				style: {
+				  background: 'linear-gradient(to right, #00b09b, #96c93d)',
+				},
+			  }).showToast();
+			  setPromotion('');
+			})
+			.catch((error) => {
+			  console.error('Error al enviar la promoción:', error);
+			  Toastify({
+				text: 'Error al enviar la promoción',
+				style: {
+				  background: 'linear-gradient(to right, #ff0000, #ff5555)',
+				},
+			  }).showToast();
+			});
+		} else {
+		  Toastify({
+			text: 'Por favor completa todos los campos',
+			style: {
+			  background: 'linear-gradient(to right, #ff0000, #ff5555)',
+			},
+		  }).showToast();
 		}
-	};
+	  };
+	  
 
 	const cargarProductos = () => {
 		getAllProductos().then(productos => {
@@ -323,6 +345,24 @@ const Admin = () => {
 					value={promotion}
 					onChange={(e) => setPromotion(e.target.value)}
 				></textarea>
+				<input
+					type="date"
+					id="promotion-date"
+					className="input-estilo"
+					placeholder="Fecha de la promoción"
+				/>
+				<input
+					type="number"
+					id="promotion-percentage"
+					className="input-estilo"
+					placeholder="Porcentaje de descuento"
+				/>
+				<select id="promotion-type" className="input-estilo">
+					<option value="">Selecciona el tipo de producto</option>
+					<option value="celulares">Celulares</option>
+					<option value="computadores">Computadores</option>
+					<option value="audifonos">Audífonos</option>
+				</select>
 				<button
 					id="btn-send-promotion"
 					className="boton-admin"
@@ -331,6 +371,7 @@ const Admin = () => {
 					<i className="bi bi-megaphone-fill"></i> Enviar Promoción
 				</button>
 			</div>
+
 
 			<div className="admin-actions">
 				<h3>Pedidos de Todos los Usuarios</h3>
