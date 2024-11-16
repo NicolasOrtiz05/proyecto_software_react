@@ -43,15 +43,19 @@ describe('paginaprincipaltest', function () {
   });
 });
 
-// Función auxiliar para hacer clic cuando el elemento esté visible y no bloqueado
+// Función auxiliar para hacer clic cuando el elemento esté visible
 async function clickWhenVisible(driver, locator, timeout = 10000) {
-  const element = await driver.wait(until.elementLocated(locator), timeout);
+  await driver.wait(until.elementLocated(locator), timeout);
+  
+  const element = await driver.findElement(locator);
+  
+  // Asegurarse de que el elemento esté visible y actualizado
   await driver.wait(until.elementIsVisible(element), timeout);
 
   // Desplazar el elemento al centro de la pantalla
   await driver.executeScript("arguments[0].scrollIntoView({block: 'center', inline: 'center'});", element);
 
-  // Verificar si el elemento está bloqueado por otro
+  // Verificar si el elemento no está bloqueado
   await driver.wait(async () => {
     const isClickable = await driver.executeScript(`
       var el = arguments[0];
@@ -63,6 +67,16 @@ async function clickWhenVisible(driver, locator, timeout = 10000) {
     return isClickable;
   }, timeout, "Elemento bloqueado por otro elemento.");
 
-  // Hacer clic en el elemento
-  await element.click();
+  // Intentar hacer clic
+  try {
+    await element.click();
+  } catch (error) {
+    if (error.name === 'StaleElementReferenceError') {
+      // Si el elemento se vuelve obsoleto, localizarlo de nuevo
+      const freshElement = await driver.findElement(locator);
+      await freshElement.click();
+    } else {
+      throw error;
+    }
+  }
 }
