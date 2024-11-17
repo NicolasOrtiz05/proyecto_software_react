@@ -9,7 +9,8 @@ describe('paginaprincipaltest', function () {
 
   beforeEach(async function () {
     const options = new chrome.Options();
-    options.addArguments('--headless'); // Modo headless para entornos CI
+    // Eliminar --headless si quieres ver lo que sucede en CI
+    // options.addArguments('--headless'); // Comentar esta línea si necesitas ver el navegador en CI
     options.addArguments('--disable-gpu'); // Necesario en entornos CI
     options.addArguments('--no-sandbox'); // Previene problemas de permisos
     options.addArguments('--disable-dev-shm-usage'); // Previene errores de memoria compartida
@@ -32,26 +33,29 @@ describe('paginaprincipaltest', function () {
     await driver.get(`${BASE_URL}/`);
     await driver.manage().window().setRect({ width: 1382, height: 736 });
 
+    // Esperar a que la página cargue productos antes de interactuar
+    await driver.wait(until.elementLocated(By.css(".producto")), 30000);  // Esperar a que aparezca al menos un producto
+
     // Interactuar con los elementos
-    await clickWhenVisible(driver, By.css(".producto:nth-child(1) .producto-agregar"));
-    await clickWhenVisible(driver, By.css(".producto:nth-child(3) .producto-agregar"));
-    await clickWhenVisible(driver, By.css(".producto:nth-child(11) .producto-agregar"));
-    await clickWhenVisible(driver, By.css(".producto:nth-child(14) .producto-agregar"));
+    await clickWhenVisible(driver, By.css(".producto:nth-child(1) .producto-agregar"), 30000);
+    await clickWhenVisible(driver, By.css(".producto:nth-child(3) .producto-agregar"), 30000);
+    await clickWhenVisible(driver, By.css(".producto:nth-child(11) .producto-agregar"), 30000);
+    await clickWhenVisible(driver, By.css(".producto:nth-child(14) .producto-agregar"), 30000);
 
     // Navegar entre secciones
-    await clickWhenVisible(driver, By.css("li:nth-child(2) > .boton-menu"));
-    await clickWhenVisible(driver, By.css(".producto:nth-child(2) .producto-agregar"));
+    await clickWhenVisible(driver, By.css("li:nth-child(2) > .boton-menu"), 30000);
+    await clickWhenVisible(driver, By.css(".producto:nth-child(2) .producto-agregar"), 30000);
 
-    await clickWhenVisible(driver, By.css("li:nth-child(3) > .boton-menu"));
-    await clickWhenVisible(driver, By.css(".producto:nth-child(5) .producto-agregar"));
+    await clickWhenVisible(driver, By.css("li:nth-child(3) > .boton-menu"), 30000);
+    await clickWhenVisible(driver, By.css(".producto:nth-child(5) .producto-agregar"), 30000);
 
-    await clickWhenVisible(driver, By.css("li:nth-child(4) > .boton-menu"));
-    await clickWhenVisible(driver, By.css(".producto:nth-child(3) .producto-agregar"));
+    await clickWhenVisible(driver, By.css("li:nth-child(4) > .boton-menu"), 30000);
+    await clickWhenVisible(driver, By.css(".producto:nth-child(3) .producto-agregar"), 30000);
   });
 });
 
 // Función auxiliar para hacer clic cuando el elemento esté visible
-async function clickWhenVisible(driver, locator, timeout = 10000) {
+async function clickWhenVisible(driver, locator, timeout = 30000) {
   await driver.wait(until.elementLocated(locator), timeout);
   
   const element = await driver.findElement(locator);
