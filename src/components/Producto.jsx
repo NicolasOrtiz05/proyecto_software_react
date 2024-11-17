@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Producto = ({ producto, agregarAlCarrito }) => {
-	console.log("agregarAlCarrito:", agregarAlCarrito); // Para confirmar si se recibe correctamente
+	
 	return (
 		<div className="producto">
 			<img className="producto-imagen" src={producto.url} alt={producto.titulo} />

@@ -8,8 +8,6 @@ export const createProducto = async (producto, imagen) => {
   const formData = new FormData();
   formData.append('producto', producto);
   formData.append('imagen', imagen);
-  console.log('producto', producto);
-  console.log('imagen', imagen);
 
   try {
     const response = await axios.post(`${API_URL}/crear`, formData, {

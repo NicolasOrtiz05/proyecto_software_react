@@ -72,7 +72,7 @@ const Cart = ({ productosEnCarrito, setProductosEnCarrito }) => {
                     uidUsuario: user.uid,
                     estado: 'pendiente'
                 };
-                console.log("Objeto pedido antes de enviarlo:", pedido);
+                
 
                 createPedido(pedido).then(() => {
                         Swal.fire({
