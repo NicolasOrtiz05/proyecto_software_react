@@ -1,9 +1,9 @@
 /* global Swal, Toastify */
 import React, { useEffect, useState } from 'react';
-import { onAuthStateChanged, auth, dbRef, database, set, ref, uploadBytes, getDownloadURL, storage, signOut } from '../services/firebase-config';
+import { onAuthStateChanged, auth, ref, getDownloadURL, storage, signOut } from '../services/firebase-config';
 import { createProducto, getAllProductos, updateProducto, deleteProducto, getProductoById } from '../services/productoServise';
 import { getAllPedidos, getPedidoById, createPedido, deletePedido, updatePedido } from '../services/pedidoService';
-import { crearPromocion, obtenerPromociones, obtenerPromocionPorId, editarPromocion, eliminarPromocion } from '../services/promocionesService';
+import { crearPromocion } from '../services/promocionesService';
 
 
 const Admin = () => {
@@ -22,7 +22,7 @@ const Admin = () => {
 					const todosLosPedidos = await getAllPedidos(); 
 					
 					if (todosLosPedidos.length > 0) {
-						console.log("llega?");
+					
 						// Ordenamos por fecha
 						todosLosPedidos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 						setPedidos(todosLosPedidos); // Actualizamos el estado

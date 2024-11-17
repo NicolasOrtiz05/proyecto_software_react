@@ -1,37 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { dbRef, database, onValue } from '../services/firebase-config';
+import { obtenerPromociones } from '../services/promocionesService';
 
 const Promotions = () => {
-  const [promotions, setPromotions] = useState([]);
+  const [promotion, setPromotion] = useState(null);
 
   useEffect(() => {
-    const promotionsRef = dbRef(database, 'promotions');
-    const unsubscribe = onValue(promotionsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const promotionsArray = Object.keys(data).map(key => ({
-          id: key,
-          ...data[key]
-        }));
-        setPromotions(promotionsArray);
-      } else {
-        setPromotions([]);
+    const fetchPromotion = async () => {
+      try {
+        const data = await obtenerPromociones(); // Espera la resolución de la promesa
+        setPromotion(data);
+      } catch (error) {
+        console.error("Error al obtener la promoción:", error);
       }
-    });
-
-    return unsubscribe;
+    };
+    
+    fetchPromotion();
   }, []);
 
   return (
     <div>
-      {promotions.map((promotion) => (
-        <div key={promotion.id} className="promotion-container">
+      {promotion ? (
+        <div className="promotion-container">
           <h3>Promoción Activa</h3>
           <p>{promotion.descripcion}</p>
-          <p>Descuento: {promotion.percentage}%</p>
+          <p>Descuento: {promotion.percentaje}%</p>
           <p>Fecha: {promotion.date}</p>
         </div>
-      ))}
+      ) : (
+        <p>No hay promociones disponibles.</p>
+      )}
     </div>
   );
 };

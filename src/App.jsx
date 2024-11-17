@@ -78,24 +78,7 @@ const AppContent = () => {
   };
 
   const agregarAlCarrito = (producto) => {
-    Toastify({
-      text: "Producto agregado",
-      duration: 3000,
-      close: true,
-      gravity: "top",
-      position: "right",
-      stopOnFocus: true,
-      style: {
-        background: "linear-gradient(to right, #2F579C, #617ebd)",
-        borderRadius: "2rem",
-        textTransform: "uppercase",
-        fontSize: ".75rem"
-      },
-      offset: {
-        x: '1.5rem',
-        y: '1.5rem'
-      },
-    }).showToast();
+    
     const productoExistente = productosEnCarrito.find(item => item.id === producto.id);
     if (productoExistente) {
       setProductosEnCarrito(productosEnCarrito.map(item =>
