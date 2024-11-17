@@ -11,65 +11,77 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Paso 1: Hacer checkout del código del frontend
-      - name: Checkout Frontend Code
+      # Checkout del frontend
+      - name: Checkout Frontend code
         uses: actions/checkout@v3
 
-      # Paso 2: Clonar el repositorio del backend
-      - name: Clone Backend Repository
-        run: |
-          git clone https://$GITHUB_ACTOR:${{ secrets.GH_TOKEN }}@github.com/Edwinguty2/backTechShop.git backend
+      # Checkout del backend con la URL correcta
+      - name: Checkout Backend code
+        uses: actions/checkout@v3
+        with:
+          repository: Edwinguty2/backTechShop
+          path: backTechShop
 
-      # Paso 3: Configurar Node.js para el frontend
+      # Configurar Java para el backend
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '18'
+
+      # Construir y ejecutar el backend
+      - name: Build and Start Backend
+        run: |
+          cd backTechShop
+          chmod +x ./gradlew
+          ./gradlew bootRun &
+          echo "Esperando que el backend inicie..."
+          attempts=0
+          max_attempts=30
+          while ! curl -s http://localhost:8084 > /dev/null; do
+            sleep 5
+            attempts=$((attempts + 1))
+            echo "Intento $attempts de $max_attempts - Esperando conexión con el backend..."
+            if [ $attempts -eq $max_attempts ]; then
+              echo "Error: El backend no respondió después de $max_attempts intentos"
+              exit 1
+            fi
+          done
+          echo "Backend iniciado exitosamente"
+
+      # Configurar Node.js para el frontend
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # Paso 4: Instalar las dependencias del frontend
+      # Instalar dependencias del frontend
       - name: Install Frontend Dependencies
-        working-directory: .
         run: npm ci
 
-      # Paso 5: Instalar dependencias del backend
-      - name: Install Backend Dependencies
+      # Configurar variables de entorno
+      - name: Create env file
         run: |
-          cd backend
-          npm ci
+          echo "REACT_APP_API_URL=http://localhost:8084" > .env
+          echo "BASE_URL=http://localhost:3000" >> .env
 
-      # Paso 6: Configurar la URL del backend en el archivo .env
-      - name: Set Backend API URL for Cypress tests
-        run: |
-          echo "REACT_APP_API_URL=http://localhost:8084" >> .env
-
-      # Paso 7: Iniciar el backend
-      - name: Start Backend
-        run: |
-          cd backend
-          npm start &
-        # Esperar unos segundos para asegurarnos de que el backend se levante correctamente
-        continue-on-error: true
-        timeout-minutes: 1
-
-      # Paso 8: Esperar a que el backend esté disponible
-      - name: Wait for Backend to be Ready
-        run: |
-          curl --retry 10 --retry-delay 5 --max-time 30 http://localhost:8084
-
-      # Paso 9: Iniciar el frontend y ejecutar Cypress
+      # Ejecutar pruebas de Cypress
       - name: Run Cypress Tests
         uses: cypress-io/github-action@v6
         with:
           start: npm start
           wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          browser: chrome
+          config: baseUrl=http://localhost:3000
 
-      # Paso 10: Subir artefactos de Cypress (videos, screenshots)
+      # Subir artefactos de Cypress
       - name: Upload Cypress artifacts
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: cypress-artifacts
           path: |
-            frontend/cypress/videos/
-            frontend/cypress/screenshots/
+            cypress/videos/
+            cypress/screenshots/
           retention-days: 7
