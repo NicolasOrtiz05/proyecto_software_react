@@ -1,4 +1,4 @@
-name: Selenium GUI Tests
+name: Frontend Selenium Tests
 
 on:
   push:
@@ -9,31 +9,52 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Check out code
+    # Paso 1: Clonar el repositorio del frontend
+    - name: Check out frontend repository
       uses: actions/checkout@v3
 
+    # Paso 2: Configurar Node.js
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
 
-    - name: Install dependencies
+    # Paso 3: Instalar dependencias del frontend
+    - name: Install frontend dependencies
       run: npm install
 
-    - name: Set up ChromeDriver and dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y chromium-browser libnss3 libgconf-2-4 libxi6 libxcomposite1 libxcursor1 libxdamage1 libxrandr2 libasound2 libatk1.0-0 libpangocairo-1.0-0 libgtk-3-0 fonts-liberation
-        export CHROME_BIN=/usr/bin/chromium-browser
+    # Paso 4: Clonar el repositorio privado del backend
+    - name: Clone backend repository
+      run: git clone https://$GITHUB_ACTOR:${{ secrets.GH_TOKEN }}@github.com/Edwinguty2/backTechShop.git backend
 
-    - name: Start server
+    # Paso 5: Instalar dependencias del backend
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm install
+
+    # Paso 6: Iniciar el backend
+    - name: Start backend
+      run: |
+        cd backend
+        npm start &
+
+    # Paso 7: Esperar a que el backend esté listo
+    - name: Wait for backend to be ready
+      run: npx wait-on http://localhost:8084
+
+    # Paso 8: Iniciar el frontend
+    - name: Start frontend
       run: npm start &
-    
-    - name: Wait for server to be ready
+
+    # Paso 9: Esperar a que el frontend esté listo
+    - name: Wait for frontend to be ready
       run: npx wait-on http://localhost:3000
 
+    # Paso 10: Ejecutar pruebas Selenium
     - name: Run Selenium GUI Tests
       env:
-        BASE_URL: "http://localhost:3000" 
+        BASE_URL: "http://localhost:3000"
       run: npm run test:gui
