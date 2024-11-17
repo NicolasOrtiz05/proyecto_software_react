@@ -14,6 +14,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Clone Backend Repository
+        run: |
+          git clone https://github.com/usuario/backend-repo.git backend
+          cd backend
+          echo "Repositorio del backend clonado con éxito."
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -28,7 +34,7 @@ jobs:
 
       - name: Build and Start Backend
         run: |
-          cd backend  # Ajusta esto a la ruta de tu backend
+          cd backend
           ./gradlew bootRun &
           echo "Esperando que el backend inicie..."
           while ! curl -s http://localhost:8084 > /dev/null; do
