@@ -29,18 +29,14 @@ jobs:
     - name: Clone backend repository
       run: git clone https://$GITHUB_ACTOR:${{ secrets.GH_TOKEN }}@github.com/Edwinguty2/backTechShop.git backend
 
-    # Paso 5: Instalar dependencias del backend (si fuera necesario)
-    - name: Install backend dependencies (if any)
-      run: |
-        cd backend
-        # Si el backend usa dependencias de Gradle, este paso podría ser necesario:
-        ./gradlew build
+    # Paso 5: Dar permisos de ejecución al archivo gradlew
+    - name: Give execute permission to gradlew
+      run: chmod +x backend/gradlew
 
     # Paso 6: Iniciar el backend usando Gradle
     - name: Start backend
       run: |
         cd backend
-        # Iniciar el backend usando Gradle (comando común para Spring Boot)
         ./gradlew bootRun &
 
     # Paso 7: Esperar a que el backend esté listo
