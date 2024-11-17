@@ -1,0 +1,33 @@
+name: Selenium GUI Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Set up ChromeDriver
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y chromium-browser
+        export CHROME_BIN=/usr/bin/chromium-browser
+
+    - name: Run Selenium GUI Tests
+      env:
+        BASE_URL: "http://localhost:3000"
+      run: npm run test:gui

@@ -23,7 +23,8 @@
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "test:unit": "mocha 'src/**/*.test.js'",
-    "test:load": "jmeter -n -t load_test.jmx -l results.jtl -e -o /tmp/report"
+    "test:load": "jmeter -n -t load_test.jmx -l results.jtl -e -o /tmp/report",
+    "test:gui": "mocha testGUI/*.js"
   },
   "eslintConfig": {
     "extends": [
