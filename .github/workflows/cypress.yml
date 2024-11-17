@@ -16,8 +16,7 @@ jobs:
 
       - name: Clone Backend Repository
         run: |
-          run: git clone https://$GITHUB_ACTOR:${{ secrets.GH_TOKEN }}@github.com/Edwinguty2/backTechShop.git backend
-         
+          git clone https://$GITHUB_ACTOR:${{ secrets.GH_TOKEN }}@github.com/Edwinguty2/backTechShop.git backend
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
