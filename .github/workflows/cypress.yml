@@ -2,9 +2,9 @@ name: Cypress Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
   cypress-run:
@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: '18'
 
-      # Configurar y iniciar el backend
+      # Configurar y ejecutar el backend
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
@@ -34,38 +34,39 @@ jobs:
         run: |
           cd backend
           chmod +x gradlew 
-          ./gradlew bootRun &
+          ./gradlew bootRun &  # Ejecuta el backend en segundo plano
           echo "Esperando que el backend inicie..."
-          sleep 30
-          echo "Continuando con la ejecución..."
+          sleep 30  # Espera para asegurar que el backend esté corriendo
 
-      # Configurar y iniciar el frontend
+      # Configurar e instalar las dependencias del frontend
       - name: Install Frontend Dependencies
         run: |
           npm ci
           npm install --save-dev start-server-and-test
 
+      # Crear archivo .env con la URL del backend en el puerto 8084
       - name: Create env file
         run: |
-          echo "REACT_APP_API_URL=http://localhost:8084" > .env
+          echo "REACT_APP_API_URL=http://localhost:8084" > .env  # Aquí se usa el puerto 8084
           echo "BASE_URL=http://localhost:3000" >> .env
 
-      # Ejecutar Cypress
+      # Ejecutar las pruebas de Cypress
       - name: Run Cypress Tests
         uses: cypress-io/github-action@v6
-        continue-on-error: true  # Esto hace que el workflow continúe incluso si hay errores
+        continue-on-error: true  # Esto hace que el workflow continúe aunque haya errores
         with:
           start: npm start
-          wait-on: 'http://localhost:3000'
+          wait-on: 'http://localhost:3000'  # Espera a que el frontend esté listo
           wait-on-timeout: 120
           browser: chrome
-          config-file: cypress.ci.config.js # Usar la configuración específica para CI
+          config-file: cypress.ci.config.js # Configuración específica para CI
         env:
           CYPRESS_VERIFY_TIMEOUT: 100000
           CYPRESS_defaultCommandTimeout: 10000
           CYPRESS_pageLoadTimeout: 30000
           CYPRESS_SKIP_FAILING: true
 
+      # Subir los artefactos de Cypress (videos y capturas de pantalla)
       - name: Upload Cypress artifacts
         uses: actions/upload-artifact@v3
         if: always()
@@ -76,7 +77,7 @@ jobs:
             cypress/screenshots/
           retention-days: 7
 
-      # Agregar un paso que siempre marque el workflow como exitoso
+      # Agregar un paso para marcar siempre el flujo de trabajo como exitoso
       - name: Always succeed
         if: always()
         run: exit 0
