@@ -2,9 +2,9 @@ name: Cypress Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
   cypress-run:
@@ -23,27 +23,41 @@ jobs:
 
       # Paso 3: Instalar las dependencias del frontend
       - name: Install Frontend Dependencies
-        working-directory: .
+        working-directory: ./frontend
         run: npm ci
 
-      # Paso 4: Configurar la URL del backend en el archivo .env
-      - name: Set Backend API URL for Cypress tests
-        run: |
-          echo "REACT_APP_API_URL=http://localhost:8084" >> .env
-          
-      # Paso 5: Esperar a que el backend esté disponible
-      - name: Wait for Backend to be Ready
-        run: |
-          curl --retry 10 --retry-delay 5 --max-time 30 http://localhost:8084  # O cualquier endpoint que verifique si el backend está listo
+      # Paso 4: Configurar el backend (si es necesario)
+      - name: Set Backend Environment
+        working-directory: ./frontend
+        run: echo "REACT_APP_API_URL=http://localhost:8084" >> .env
 
-      # Paso 6: Iniciar el frontend y ejecutar Cypress
+      # Paso 5: Iniciar el backend
+      - name: Start Backend
+        working-directory: ./backend
+        run: ./gradlew bootRun &
+      
+      # Paso 6: Esperar a que el backend esté listo
+      - name: Wait for Backend
+        run: curl --retry 10 --retry-delay 5 --max-time 30 http://localhost:8084
+      
+      # Paso 7: Iniciar el frontend
+      - name: Start Frontend
+        working-directory: ./frontend
+        run: npm start &
+      
+      # Paso 8: Esperar a que el frontend esté listo
+      - name: Wait for Frontend
+        run: npx wait-on http://localhost:3000
+      
+      # Paso 9: Ejecutar las pruebas de Cypress
       - name: Run Cypress Tests
         uses: cypress-io/github-action@v6
         with:
           start: npm start
-          wait-on: 'http://localhost:3000'  # Espera a que el frontend esté disponible
-
-      # Paso 7: Subir artefactos de Cypress (videos, screenshots)
+          wait-on: 'http://localhost:3000'
+          browser: chrome
+      
+      # Paso 10: Subir artefactos
       - name: Upload Cypress artifacts
         uses: actions/upload-artifact@v3
         if: always()
