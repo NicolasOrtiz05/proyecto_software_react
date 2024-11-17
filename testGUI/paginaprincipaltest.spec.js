@@ -34,7 +34,7 @@ describe('paginaprincipaltest', function () {
     await driver.manage().window().setRect({ width: 1382, height: 736 });
 
     // Esperar a que la página cargue productos antes de interactuar
-    await driver.wait(until.elementLocated(By.css(".producto")), 60000);  // Esperar a que aparezca al menos un producto
+    await driver.wait(until.elementLocated(By.css(".producto")), 60000);   // Esperar a que aparezca al menos un producto
 
     // Interactuar con los elementos
     await clickWhenVisible(driver, By.css(".producto:nth-child(1) .producto-agregar"), 30000);
