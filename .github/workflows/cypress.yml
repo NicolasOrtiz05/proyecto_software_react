@@ -33,6 +33,7 @@ jobs:
       - name: Build and Start Backend
         run: |
           cd backend
+          chmod +x gradlew 
           ./gradlew bootRun &
           echo "Esperando que el backend inicie..."
           while ! curl -s http://localhost:8084 > /dev/null; do
