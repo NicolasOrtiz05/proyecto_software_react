@@ -16,7 +16,7 @@ jobs:
 
       - name: Clone Backend Repository
         run: |
-          git clone https://github.com/usuario/backend-repo.git backend
+          git clone https://github.com/Edwinguty2/backTechShop.git backend
           cd backend
           echo "Repositorio del backend clonado con éxito."
 
