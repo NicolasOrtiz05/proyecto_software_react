@@ -33,23 +33,27 @@ jobs:
     - name: Give execute permission to gradlew
       run: chmod +x backend/gradlew
 
-    # Paso 6: Iniciar el backend usando Gradle
+    # Paso 6: Instalar wait-on
+    - name: Install wait-on
+      run: npm install -g wait-on  # Instalar wait-on para poder esperar los servicios
+
+    # Paso 7: Iniciar el backend usando Gradle
     - name: Start backend
       run: |
         cd backend
-        ./gradlew bootRun &
+        ./gradlew bootRun &  # Iniciar el backend en segundo plano
 
-    # Paso 7: Esperar a que el backend esté listo
+    # Paso 8: Esperar a que el backend esté listo
     - name: Wait for backend to be ready
-      run: npx wait-on http://localhost:8084 
+      run: npx wait-on http://localhost:8084  # Esperar a que el backend esté disponible
 
-    # Paso 8: Iniciar el frontend
+    # Paso 9: Iniciar el frontend
     - name: Start frontend
-      run: npm start &
-
-    # Paso 9: Esperar a que el frontend esté listo
-    - name: Wait for frontend to be ready
-      run: npx wait-on http://localhost:3000
+      run: |
+        npm install -g serve
+        serve -s build -l 3000 &  # Iniciar el frontend en segundo plano
+        echo "Waiting for frontend to start..."
+        npx wait-on http://localhost:3000  # Esperar a que el frontend esté disponible
 
     # Paso 10: Ejecutar pruebas Selenium
     - name: Run Selenium GUI Tests
