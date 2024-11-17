@@ -11,30 +11,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      # Paso 1: Hacer checkout del código del frontend
+      - name: Checkout Frontend Code
         uses: actions/checkout@v3
 
+      # Paso 2: Clonar el repositorio del backend
+      - name: Clone Backend Repository
+        run: |
+          git clone https://$GITHUB_ACTOR:${{ secrets.GH_TOKEN }}@github.com/Edwinguty2/backTechShop.git backend
+
+      # Paso 3: Configurar Node.js para el frontend
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Install Dependencies
+      # Paso 4: Instalar las dependencias del frontend
+      - name: Install Frontend Dependencies
+        working-directory: .
         run: npm ci
 
-      - name: Start Backend
+      # Paso 5: Configurar la URL del backend en el archivo .env
+      - name: Set Backend API URL for Cypress tests
         run: |
-          npm install -g json-server
-          json-server --watch db.json --port 8084 &
-
+          echo "REACT_APP_API_URL=http://localhost:8084" >> .env
+          
+      # Paso 6: Esperar a que el backend esté disponible
       - name: Wait for Backend to be Ready
         run: |
-          until curl --output /dev/null --silent --head --fail http://localhost:8084; do
-            echo "Waiting for backend..."; sleep 5;
-          done
+          curl --retry 10 --retry-delay 5 --max-time 30 http://localhost:8084  
 
+      # Paso 7: Iniciar el frontend y ejecutar Cypress
       - name: Run Cypress Tests
         uses: cypress-io/github-action@v6
         with:
           start: npm start
           wait-on: 'http://localhost:3000'
+
+      # Paso 8: Subir artefactos de Cypress (videos, screenshots)
+      - name: Upload Cypress artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cypress-artifacts
+          path: |
+            frontend/cypress/videos/
+            frontend/cypress/screenshots/
+          retention-days: 7
