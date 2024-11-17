@@ -1,89 +1,65 @@
-name: Frontend Cypress Tests
+# .github/workflows/cypress.yml
+name: Cypress Tests
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main, master ]
   pull_request:
+    branches: [ main, master ]
 
 jobs:
-  test:
+  cypress-run:
     runs-on: ubuntu-latest
-    services:
-      selenium:
-        image: selenium/standalone-chrome:latest  # Puedes mantener este servicio si usas Selenium junto con Cypress.
-        ports:
-          - 4444:4444
-        options: >-
-          --health-cmd="curl --silent --fail localhost:4444/wd/hub/status"
-          --health-interval=30s
-          --health-timeout=30s
-          --health-retries=3
-
+    
     steps:
-    # Paso 1: Clonar el repositorio del frontend
-    - name: Check out frontend repository
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    # Paso 2: Configurar Node.js
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'  # Asegúrate de usar la versión adecuada de Node.js
+      # Configura Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
-    # Paso 3: Instalar dependencias del frontend
-    - name: Install frontend dependencies
-      run: npm ci  # Usamos npm ci para una instalación más rápida y reproducible
+      # Configura Java para el backend
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
 
-    # Paso 4: Clonar el repositorio privado del backend
-    - name: Clone backend repository
-      run: git clone https://$GITHUB_ACTOR:${{ secrets.GH_TOKEN }}@github.com/Edwinguty2/backTechShop.git backend
+      # Instalar dependencias del frontend
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
 
-    # Paso 5: Dar permisos de ejecución al archivo gradlew
-    - name: Give execute permission to gradlew
-      run: chmod +x backend/gradlew
+      # Iniciar el backend
+      - name: Start Backend
+        run: |
+          cd backend
+          ./gradlew bootRun &
+          sleep 30
 
-    # Paso 6: Instalar dependencias del backend con Gradle
-    - name: Install backend dependencies with Gradle
-      run: |
-        cd backend
-        ./gradlew build  # Instalar las dependencias de Gradle (build)
+      # Iniciar el frontend y ejecutar Cypress
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: frontend
+          start: npm start
+          wait-on: 'http://localhost:3000'
+          # Registrar videos y screenshots como artefactos
+          record: false
 
-    # Paso 7: Instalar wait-on para esperar que el backend y el frontend estén listos
-    - name: Install wait-on
-      run: npm install -g wait-on  # Instalar wait-on para poder esperar los servicios
-
-    # Paso 8: Iniciar el backend usando Gradle
-    - name: Start backend
-      run: |
-        cd backend
-        ./gradlew bootRun &  # Iniciar el backend en segundo plano
-
-    # Paso 9: Esperar a que el backend esté listo
-    - name: Wait for backend to be ready
-      run: npx wait-on http://localhost:8084  # Esperar a que el backend esté disponible
-
-    # Paso 10: Iniciar el frontend
-    - name: Start frontend
-      run: |
-        npm install -g serve
-        serve -s build -l 3000 &  # Iniciar el frontend en segundo plano
-        echo "Waiting for frontend to start..."
-        npx wait-on http://localhost:3000  # Esperar a que el frontend esté disponible
-
-    # Paso 11: Ejecutar pruebas Cypress
-    - name: Run Cypress Tests
-      env:
-        BASE_URL: "http://localhost:3000"
-        CYPRESS_baseUrl: "http://localhost:3000"  # Asegúrate de que Cypress apunte a la URL del frontend
-      run: npx cypress run  # Ejecutar Cypress (esto asume que tienes configurado cypress.json y pruebas)
-
-    # Paso 12: Subir artefactos de Cypress (si deseas guardar videos/screenshots)
-    - name: Upload Cypress artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: cypress-artifacts
-        path: |
-          cypress/videos/
-          cypress/screenshots/
-        retention-days: 7
+      # Guardar evidencias
+      - name: Upload Cypress artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cypress-artifacts
+          path: |
+            frontend/cypress/videos/
+            frontend/cypress/screenshots/
+          retention-days: 7
