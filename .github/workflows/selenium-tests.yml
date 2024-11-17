@@ -1,4 +1,4 @@
-name: Selenium GUI Tests
+name: Frontend Selenium Tests
 
 on:
   push:
@@ -11,33 +11,57 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out code
+    # Paso 1: Clonar el repositorio del frontend
+    - name: Check out frontend repository
       uses: actions/checkout@v3
 
+    # Paso 2: Configurar Node.js
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
 
-    - name: Install dependencies
+    # Paso 3: Instalar dependencias del frontend
+    - name: Install frontend dependencies
       run: npm install
 
-    - name: Build React app
-      run: CI=false npm run build
+    # Paso 4: Clonar el repositorio privado del backend
+    - name: Clone backend repository
+      run: git clone https://$GITHUB_ACTOR:${{ secrets.GH_TOKEN }}@github.com/Edwinguty2/backTechShop.git backend
 
-    - name: Start React server
+    # Paso 5: Dar permisos de ejecución al archivo gradlew
+    - name: Give execute permission to gradlew
+      run: chmod +x backend/gradlew
+
+    # Paso 6: Instalar dependencias del backend con Gradle
+    - name: Install backend dependencies with Gradle
+      run: |
+        cd backend
+        ./gradlew build  # Instalar las dependencias de Gradle (build)
+
+    # Paso 7: Instalar wait-on
+    - name: Install wait-on
+      run: npm install -g wait-on  # Instalar wait-on para poder esperar los servicios
+
+    # Paso 8: Iniciar el backend usando Gradle
+    - name: Start backend
+      run: |
+        cd backend
+        ./gradlew bootRun &  # Iniciar el backend en segundo plano
+
+    # Paso 9: Esperar a que el backend esté listo
+    - name: Wait for backend to be ready
+      run: npx wait-on http://localhost:8084  # Esperar a que el backend esté disponible
+
+    # Paso 10: Iniciar el frontend
+    - name: Start frontend
       run: |
         npm install -g serve
-        serve -s build -l 3000 &
-        echo "Waiting for server to start..."
-        npx wait-on http://localhost:3000
+        serve -s build -l 3000 &  # Iniciar el frontend en segundo plano
+        echo "Waiting for frontend to start..."
+        npx wait-on http://localhost:3000  # Esperar a que el frontend esté disponible
 
-    - name: Install Chrome
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
-        google-chrome --version
-
+    # Paso 11: Ejecutar pruebas Selenium
     - name: Run Selenium GUI Tests
       env:
         BASE_URL: "http://localhost:3000"
