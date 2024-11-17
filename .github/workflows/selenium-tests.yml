@@ -11,75 +11,118 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Paso 1: Clonar el repositorio del frontend
     - name: Check out frontend repository
       uses: actions/checkout@v3
 
-    # Paso 2: Configurar Node.js
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
 
-    # Paso 3: Instalar dependencias del frontend
     - name: Install frontend dependencies
       run: npm install
 
-    # Paso 4: Clonar el repositorio privado del backend
     - name: Clone backend repository
       run: git clone https://$GITHUB_ACTOR:${{ secrets.GH_TOKEN }}@github.com/Edwinguty2/backTechShop.git backend
 
-    # Paso 5: Instalar Java 17 con distribución AdoptOpenJDK
     - name: Set up Java 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
-        distribution: 'temurin'  # Especificar distribución
+        distribution: 'temurin'
 
-    # Paso 6: Dar permisos de ejecución al archivo gradlew
     - name: Give execute permission to gradlew
       run: chmod +x backend/gradlew
 
-    # Paso 7: Instalar dependencias del backend con Gradle
     - name: Install backend dependencies with Gradle
       run: |
         cd backend
-        ./gradlew build  # Instalar las dependencias de Gradle (build)
+        ./gradlew build
     
-    # Paso 8: Instalar wait-on
     - name: Install wait-on
-      run: npm install -g wait-on  # Instalar wait-on para poder esperar los servicios
+      run: npm install -g wait-on
 
-     # Paso: Verificar puertos libres
-    - name: Check for free ports
+    # Verificar puerto antes de iniciar
+    - name: Check port 8084
       run: |
-        echo "Checking for free ports..."
-        # Buscar puertos libres en el rango de 8080 a 8090
-        for port in {8080..8090}; do
-          if ! lsof -i :$port; then
-            echo "Port $port is free"
-          else
-            echo "Port $port is in use"
-          fi
-        done
-    # Paso 10: Iniciar el backend usando Gradle
+        if lsof -i :8084; then
+          echo "Port 8084 is in use"
+          exit 1
+        else
+          echo "Port 8084 is available"
+        fi
+
+    # Iniciar backend con mejor logging
     - name: Start backend
       run: |
         cd backend
-        ./gradlew bootRun &  # Iniciar el backend en segundo plano
-    # Paso 11: Esperar a que el backend esté listo
-    - name: Wait for backend to be ready
-      run: npx wait-on http://localhost:8084  # Esperar a que el backend esté disponible
+        # Crear directorio para logs
+        mkdir -p logs
+        # Iniciar el backend y redirigir salida a un archivo
+        ./gradlew bootRun > logs/backend.log 2>&1 &
+        # Guardar el PID
+        echo $! > backend.pid
+        
+        # Esperar y mostrar logs mientras el backend inicia
+        echo "Waiting for backend to start..."
+        for i in {1..30}; do
+          if curl -s http://localhost:8084/actuator/health 2>&1 | grep -q "UP"; then
+            echo "Backend is up!"
+            break
+          fi
+          echo "Attempt $i: Backend not ready yet..."
+          tail -n 5 logs/backend.log
+          sleep 10
+        done
+        
+        # Verificar si el proceso sigue corriendo
+        if ps -p $(cat backend.pid) > /dev/null; then
+          echo "Backend process is running"
+        else
+          echo "Backend process died"
+          cat logs/backend.log
+          exit 1
+        fi
 
-    # Paso 12: Iniciar el frontend
+    # Esperar backend con timeout más largo
+    - name: Wait for backend
+      run: |
+        npx wait-on -t 60000 http://localhost:8084/actuator/health
+      continue-on-error: true
+
+    # Verificar estado del backend
+    - name: Check backend status
+      run: |
+        if curl -s http://localhost:8084/actuator/health; then
+          echo "Backend is responding"
+        else
+          echo "Backend is not responding"
+          echo "Backend logs:"
+          cat backend/logs/backend.log
+          exit 1
+        fi
+
     - name: Start frontend
       run: |
         npm install -g serve
-        serve -s build -l 3000 &  # Iniciar el frontend en segundo plano
+        npm run build
+        serve -s build -l 3000 &
         echo "Waiting for frontend to start..."
-        npx wait-on http://localhost:3000  # Esperar a que el frontend esté disponible
-    # Paso 13: Ejecutar pruebas Selenium
+        npx wait-on -t 30000 http://localhost:3000
+
     - name: Run Selenium GUI Tests
       env:
         BASE_URL: "http://localhost:3000"
-      run: npm run test:gui
+      run: npm run test:gui
+
+    # Paso adicional para recolectar logs en caso de fallo
+    - name: Collect logs if failure
+      if: failure()
+      run: |
+        echo "=== Backend Logs ==="
+        cat backend/logs/backend.log || true
+        echo "=== Frontend Logs ==="
+        ls -la
+        echo "=== Process Status ==="
+        ps aux | grep java
+        ps aux | grep node
