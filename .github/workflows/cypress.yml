@@ -34,7 +34,7 @@ jobs:
       # Paso 5: Esperar a que el backend esté disponible
       - name: Wait for Backend to be Ready
         run: |
-          curl --retry 10 --retry-delay 5 --max-time 30 http://localhost:8084  
+          curl --request GET "http://localhost:8084" --header "Content-Type: application/json"
 
       # Paso 6: Iniciar el frontend y ejecutar Cypress
       - name: Run Cypress Tests
