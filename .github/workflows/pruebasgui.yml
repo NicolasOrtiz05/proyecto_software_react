@@ -19,6 +19,10 @@ jobs:
           --health-interval=30s
           --health-timeout=30s
           --health-retries=3
+          --no-sandbox
+          --disable-dev-shm-usage
+          --disable-gpu
+          --headless  # Si no lo tienes agregado, prueba agregarlo aquí
 
     steps:
     - name: Check out code
@@ -50,3 +54,10 @@ jobs:
         BASE_URL: "http://localhost:3000"
         SELENIUM_HOST: "localhost"  # Esto apunta al contenedor Selenium
       run: npm run test:gui
+
+    - name: Wait for Selenium to be ready
+      run: |
+        echo "Esperando a que Selenium esté listo..."
+        until curl --silent --fail localhost:4444/wd/hub/status; do
+          sleep 5
+        done
