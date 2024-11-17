@@ -11,61 +11,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout del frontend
-      - name: Checkout Frontend code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      # Checkout del backend con la URL correcta
-      - name: Checkout Backend code
-        uses: actions/checkout@v3
-        with:
-          repository: Edwinguty2/backTechShop
-          path: backTechShop
-
-      # Configurar Java para el backend
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '18'
-
-      # Construir y ejecutar el backend
-      - name: Build and Start Backend
-        run: |
-          cd backTechShop
-          chmod +x ./gradlew
-          ./gradlew bootRun &
-          echo "Esperando que el backend inicie..."
-          attempts=0
-          max_attempts=30
-          while ! curl -s http://localhost:8084 > /dev/null; do
-            sleep 5
-            attempts=$((attempts + 1))
-            echo "Intento $attempts de $max_attempts - Esperando conexión con el backend..."
-            if [ $attempts -eq $max_attempts ]; then
-              echo "Error: El backend no respondió después de $max_attempts intentos"
-              exit 1
-            fi
-          done
-          echo "Backend iniciado exitosamente"
-
-      # Configurar Node.js para el frontend
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # Instalar dependencias del frontend
+      # Configurar y iniciar el backend
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Build and Start Backend
+        run: |
+          cd backend  # Ajusta esto a la ruta de tu backend
+          ./gradlew bootRun &
+          echo "Esperando que el backend inicie..."
+          while ! curl -s http://localhost:8084 > /dev/null; do
+            sleep 5
+          done
+
+      # Configurar y iniciar el frontend
       - name: Install Frontend Dependencies
         run: npm ci
 
-      # Configurar variables de entorno
       - name: Create env file
         run: |
           echo "REACT_APP_API_URL=http://localhost:8084" > .env
           echo "BASE_URL=http://localhost:3000" >> .env
 
-      # Ejecutar pruebas de Cypress
+      # Ejecutar Cypress
       - name: Run Cypress Tests
         uses: cypress-io/github-action@v6
         with:
@@ -75,7 +54,6 @@ jobs:
           browser: chrome
           config: baseUrl=http://localhost:3000
 
-      # Subir artefactos de Cypress
       - name: Upload Cypress artifacts
         uses: actions/upload-artifact@v3
         if: always()
