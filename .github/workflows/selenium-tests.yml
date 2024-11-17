@@ -40,7 +40,10 @@ jobs:
         npm install -g serve
         serve -s build -l 3000 &
         echo "Waiting for server to start..."
-        npx wait-on http://localhost:3000
+        while ! curl -s http://localhost:3000 > /dev/null; do
+          echo "Esperando servidor React..."
+          sleep 5
+        done
 
     - name: Run Selenium GUI Tests
       env:
