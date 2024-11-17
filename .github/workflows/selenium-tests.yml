@@ -29,21 +29,23 @@ jobs:
     - name: Clone backend repository
       run: git clone https://$GITHUB_ACTOR:${{ secrets.GH_TOKEN }}@github.com/Edwinguty2/backTechShop.git backend
 
-    # Paso 5: Instalar dependencias del backend
-    - name: Install backend dependencies
+    # Paso 5: Instalar dependencias del backend (si fuera necesario)
+    - name: Install backend dependencies (if any)
       run: |
         cd backend
-        npm install
+        # Si el backend usa dependencias de Gradle, este paso podría ser necesario:
+        ./gradlew build
 
-    # Paso 6: Iniciar el backend
+    # Paso 6: Iniciar el backend usando Gradle
     - name: Start backend
       run: |
         cd backend
-        npm start &
+        # Iniciar el backend usando Gradle (comando común para Spring Boot)
+        ./gradlew bootRun &
 
     # Paso 7: Esperar a que el backend esté listo
     - name: Wait for backend to be ready
-      run: npx wait-on http://localhost:8084
+      run: npx wait-on http://localhost:8084 
 
     # Paso 8: Iniciar el frontend
     - name: Start frontend
