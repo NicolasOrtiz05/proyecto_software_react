@@ -50,15 +50,18 @@ jobs:
     - name: Install wait-on
       run: npm install -g wait-on  # Instalar wait-on para poder esperar los servicios
 
-    # Paso 9: Finalizar cualquier proceso que esté usando el puerto 8084
-    - name: Kill process using port 8084
+     # Paso: Verificar puertos libres
+    - name: Check for free ports
       run: |
-        if lsof -i :8084; then
-          echo "Killing process on port 8084..."
-          lsof -t -i :8084 | xargs kill -9
-        else
-          echo "No process found on port 8084."
-        fi
+        echo "Checking for free ports..."
+        # Buscar puertos libres en el rango de 8080 a 8090
+        for port in {8080..8090}; do
+          if ! lsof -i :$port; then
+            echo "Port $port is free"
+          else
+            echo "Port $port is in use"
+          fi
+        done
 
     # Paso 10: Iniciar el backend usando Gradle
     - name: Start backend
