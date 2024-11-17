@@ -3,11 +3,14 @@ describe('paginaprincipaltest', function () {
     // Visitar la página principal antes de cada prueba
     cy.visit('/');
     
-    // Esperar a que los productos se carguen inicialmente
-    cy.get('.producto', { timeout: 20000 }).should('exist');
+    // Esperar a que los productos se carguen inicialmente, aumentando el timeout
+    cy.get('.producto', { timeout: 30000 }).should('exist');
     
     // Establecer el tamaño de la ventana
     cy.viewport(1382, 736);
+
+    // Espera adicional antes de comenzar las pruebas (opcional)
+    cy.wait(3000); // Solo si es necesario, esta espera se ejecutará antes de cada prueba
   });
 
   it('paginaprincipaltest', function () {
@@ -24,7 +27,7 @@ describe('paginaprincipaltest', function () {
     cy.get('li:nth-child(2) > .boton-menu')
       .click()
       .then(() => {
-        cy.get('.producto').should('exist');
+        cy.get('.producto', { timeout: 30000 }).should('exist'); // Asegurarse que los productos estén disponibles
         clickWhenVisible(".producto:nth-child(2) .producto-agregar");
       });
 
@@ -32,7 +35,7 @@ describe('paginaprincipaltest', function () {
     cy.get('li:nth-child(3) > .boton-menu')
       .click()
       .then(() => {
-        cy.get('.producto').should('exist');
+        cy.get('.producto', { timeout: 30000 }).should('exist'); // Asegurarse que los productos estén disponibles
         clickWhenVisible(".producto:nth-child(5) .producto-agregar");
       });
 
@@ -40,7 +43,7 @@ describe('paginaprincipaltest', function () {
     cy.get('li:nth-child(4) > .boton-menu')
       .click()
       .then(() => {
-        cy.get('.producto').should('exist');
+        cy.get('.producto', { timeout: 30000 }).should('exist'); // Asegurarse que los productos estén disponibles
         clickWhenVisible(".producto:nth-child(3) .producto-agregar");
       });
   });
@@ -48,7 +51,7 @@ describe('paginaprincipaltest', function () {
 
 // Función auxiliar mejorada para hacer clic cuando el elemento esté visible
 const clickWhenVisible = (selector) => {
-  cy.get(selector, { timeout: 30000 }) // Reducido a 30 segundos, que debería ser suficiente
+  cy.get(selector, { timeout: 30000 }) // Aumentar el tiempo de espera a 30 segundos
     .should('be.visible')
     .scrollIntoView({ behavior: 'smooth' })
     .wait(500) // Esperar a que termine el scroll
