@@ -9,7 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
     - name: Check out code
       uses: actions/checkout@v3
@@ -22,14 +21,19 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Install Chrome
+    - name: Set up ChromeDriver and dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
-        google-chrome --version
+        sudo apt-get install -y chromium-browser libnss3 libgconf-2-4 libxi6 libxcomposite1 libxcursor1 libxdamage1 libxrandr2 libasound2 libatk1.0-0 libpangocairo-1.0-0 libgtk-3-0 fonts-liberation
+        export CHROME_BIN=/usr/bin/chromium-browser
+
+    - name: Start server
+      run: npm start &
+    
+    - name: Wait for server to be ready
+      run: npx wait-on http://localhost:3000
 
     - name: Run Selenium GUI Tests
       env:
-        BASE_URL: "http://localhost:3000" # Configura tu URL base si es necesario
+        BASE_URL: "http://localhost:3000" 
       run: npm run test:gui
-
