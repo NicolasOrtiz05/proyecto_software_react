@@ -9,8 +9,12 @@ describe('paginaprincipaltest', function () {
 
   beforeEach(async function () {
     const options = new chrome.Options();
-    options.addArguments('--ignore-certificate-errors');
-    options.addArguments('--allow-insecure-localhost');
+    options.addArguments('--headless'); // Modo headless para entornos CI
+    options.addArguments('--disable-gpu'); // Necesario en entornos CI
+    options.addArguments('--no-sandbox'); // Previene problemas de permisos
+    options.addArguments('--disable-dev-shm-usage'); // Previene errores de memoria compartida
+    options.addArguments('--ignore-certificate-errors'); // Ignorar errores de certificados
+    options.addArguments('--allow-insecure-localhost'); // Permitir localhost inseguro
 
     driver = await new Builder()
       .forBrowser('chrome')
@@ -19,7 +23,9 @@ describe('paginaprincipaltest', function () {
   });
 
   afterEach(async function () {
-    await driver.quit();
+    if (driver) {
+      await driver.quit();
+    }
   });
 
   it('paginaprincipaltest', async function () {

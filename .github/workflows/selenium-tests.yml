@@ -9,6 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
     - name: Check out code
       uses: actions/checkout@v3
@@ -21,13 +22,14 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Set up ChromeDriver
+    - name: Install Chrome
       run: |
         sudo apt-get update
-        sudo apt-get install -y chromium-browser
-        export CHROME_BIN=/usr/bin/chromium-browser
+        sudo apt-get install -y google-chrome-stable
+        google-chrome --version
 
     - name: Run Selenium GUI Tests
       env:
-        BASE_URL: "http://localhost:3000" 
+        BASE_URL: "http://localhost:3000" # Configura tu URL base si es necesario
       run: npm run test:gui
+
