@@ -1,0 +1,65 @@
+# .github/workflows/cypress.yml
+name: Cypress Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Configura Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      # Configura Java para el backend
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      # Instalar dependencias del frontend
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # Iniciar el backend
+      - name: Start Backend
+        run: |
+          cd backend
+          ./gradlew bootRun &
+          sleep 30
+
+      # Iniciar el frontend y ejecutar Cypress
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: frontend
+          start: npm start
+          wait-on: 'http://localhost:3000'
+          # Registrar videos y screenshots como artefactos
+          record: false
+
+      # Guardar evidencias
+      - name: Upload Cypress artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cypress-artifacts
+          path: |
+            frontend/cypress/videos/
+            frontend/cypress/screenshots/
+          retention-days: 7
