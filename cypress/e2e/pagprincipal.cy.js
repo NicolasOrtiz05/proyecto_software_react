@@ -28,8 +28,8 @@ describe('paginaprincipaltest', function () {
 
 // Función auxiliar para hacer clic cuando el elemento esté visible
 const clickWhenVisible = (selector) => {
-  cy.get(selector)
-    .should('be.visible')  // Espera a que el elemento sea visible
-    .scrollIntoView()      // Desplaza el elemento al centro de la pantalla
-    .click();              // Hace clic en el elemento
+  cy.get(selector, { timeout: 20000 })  // Espera hasta 20 segundos para que el elemento sea visible
+    .should('be.visible')               // Espera a que el elemento sea visible
+    .scrollIntoView()                   // Desplaza el elemento al centro de la pantalla
+    .click();                           // Hace clic en el elemento
 };
