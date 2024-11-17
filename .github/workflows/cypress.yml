@@ -1,4 +1,3 @@
-# .github/workflows/cypress.yml
 name: Cypress Tests
 
 on:
@@ -10,50 +9,41 @@ on:
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout
+      # Paso 1: Hacer checkout del código
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      # Configura Node.js
-      - name: Setup Node.js
+      # Paso 2: Configurar Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
 
-      # Configura Java para el backend
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
-
-      # Instalar dependencias del frontend
+      # Paso 3: Instalar las dependencias del frontend
       - name: Install Frontend Dependencies
         working-directory: frontend
         run: npm ci
 
-      # Iniciar el backend
-      - name: Start Backend
+      # Paso 4: Configurar la URL del backend en el archivo .env
+      - name: Set Backend API URL for Cypress tests
         run: |
-          cd backend
-          ./gradlew bootRun &
-          sleep 30
+          echo "REACT_APP_API_URL=http://localhost:8084" >> frontend/.env
+          
+      # Paso 5: Esperar a que el backend esté disponible
+      - name: Wait for Backend to be Ready
+        run: |
+          curl --retry 10 --retry-delay 5 --max-time 30 http://localhost:8084  # O cualquier endpoint que verifique si el backend está listo
 
-      # Iniciar el frontend y ejecutar Cypress
-      - name: Cypress run
+      # Paso 6: Iniciar el frontend y ejecutar Cypress
+      - name: Run Cypress Tests
         uses: cypress-io/github-action@v6
         with:
-          working-directory: frontend
           start: npm start
-          wait-on: 'http://localhost:3000'
-          # Registrar videos y screenshots como artefactos
-          record: false
+          wait-on: 'http://localhost:3000'  # Espera a que el frontend esté disponible
 
-      # Guardar evidencias
+      # Paso 7: Subir artefactos de Cypress (videos, screenshots)
       - name: Upload Cypress artifacts
         uses: actions/upload-artifact@v3
         if: always()
