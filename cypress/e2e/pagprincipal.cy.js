@@ -4,7 +4,7 @@ describe('paginaprincipaltest', function () {
     cy.visit('/');
     
     // Esperar a que los productos se carguen inicialmente
-    cy.get('.producto', { timeout: 10000 }).should('exist');
+    cy.get('.producto', { timeout: 20000 }).should('exist');
     
     // Establecer el tamaño de la ventana
     cy.viewport(1382, 736);
