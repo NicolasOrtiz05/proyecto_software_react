@@ -29,25 +29,37 @@ jobs:
     - name: Clone backend repository
       run: git clone https://$GITHUB_ACTOR:${{ secrets.GH_TOKEN }}@github.com/Edwinguty2/backTechShop.git backend
 
-    # Paso 5: Dar permisos de ejecución al archivo gradlew
+    # Paso 5: Instalar Java 17
+    - name: Set up Java 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+
+    # Paso 6: Dar permisos de ejecución al archivo gradlew
     - name: Give execute permission to gradlew
       run: chmod +x backend/gradlew
 
-    # Paso 6: Instalar wait-on
+    # Paso 7: Instalar dependencias del backend con Gradle
+    - name: Install backend dependencies with Gradle
+      run: |
+        cd backend
+        ./gradlew build  # Instalar las dependencias de Gradle (build)
+
+    # Paso 8: Instalar wait-on
     - name: Install wait-on
       run: npm install -g wait-on  # Instalar wait-on para poder esperar los servicios
 
-    # Paso 7: Iniciar el backend usando Gradle
+    # Paso 9: Iniciar el backend usando Gradle
     - name: Start backend
       run: |
         cd backend
         ./gradlew bootRun &  # Iniciar el backend en segundo plano
 
-    # Paso 8: Esperar a que el backend esté listo
+    # Paso 10: Esperar a que el backend esté listo
     - name: Wait for backend to be ready
       run: npx wait-on http://localhost:8084  # Esperar a que el backend esté disponible
 
-    # Paso 9: Iniciar el frontend
+    # Paso 11: Iniciar el frontend
     - name: Start frontend
       run: |
         npm install -g serve
@@ -55,7 +67,7 @@ jobs:
         echo "Waiting for frontend to start..."
         npx wait-on http://localhost:3000  # Esperar a que el frontend esté disponible
 
-    # Paso 10: Ejecutar pruebas Selenium
+    # Paso 12: Ejecutar pruebas Selenium
     - name: Run Selenium GUI Tests
       env:
         BASE_URL: "http://localhost:3000"
