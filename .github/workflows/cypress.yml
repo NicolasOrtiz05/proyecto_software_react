@@ -11,45 +11,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Paso 1: Hacer checkout del código
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Paso 2: Configurar Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # Paso 3: Instalar las dependencias del frontend
-      - name: Install Frontend Dependencies
-        working-directory: .
+      - name: Install Dependencies
         run: npm ci
 
-      # Paso 4: Configurar la URL del backend en el archivo .env
-      - name: Set Backend API URL for Cypress tests
+      - name: Start Backend
         run: |
-          echo "REACT_APP_API_URL=http://localhost:8084" >> .env
-          
-      # Paso 5: Esperar a que el backend esté disponible
+          npm install -g json-server
+          json-server --watch db.json --port 8084 &
+
       - name: Wait for Backend to be Ready
         run: |
-          curl --request GET "http://localhost:8084" --header "Content-Type: application/json"
+          until curl --output /dev/null --silent --head --fail http://localhost:8084; do
+            echo "Waiting for backend..."; sleep 5;
+          done
 
-      # Paso 6: Iniciar el frontend y ejecutar Cypress
       - name: Run Cypress Tests
         uses: cypress-io/github-action@v6
         with:
           start: npm start
-          wait-on: 'http://localhost:3000'  # Espera a que el frontend esté disponible
-
-      # Paso 7: Subir artefactos de Cypress (videos, screenshots)
-      - name: Upload Cypress artifacts
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: cypress-artifacts
-          path: |
-            frontend/cypress/videos/
-            frontend/cypress/screenshots/
-          retention-days: 7
+          wait-on: 'http://localhost:3000'
